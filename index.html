@@ -253,10 +253,7 @@
     <section id="view-rider-profile" class="view">
       <div class="card">
         <h2><span class="icon">👤</span> My Profile</h2>
-        <p class="subtitle">This is how a driver or your supervisors will identify and reach you.</p>
-        <label>Full Name</label>
-        <input type="text" id="r-name" placeholder="Your name">
-        <div class="field-error" id="r-name-err">Please enter your name.</div>
+        <p class="subtitle">Save your phone number and supervisor notification order. Names are not collected or displayed.</p>
         <label>Your Phone Number</label>
         <input type="tel" id="r-phone" placeholder="(555) 555-5555">
         <div class="field-error" id="r-phone-err">Please enter a valid phone number.</div>
@@ -274,10 +271,7 @@
     <section id="view-dd-profile" class="view">
       <div class="card">
         <h2><span class="icon">🚗</span> Designated Driver Profile</h2>
-        <p class="subtitle">Only users with a completed DD profile can view and accept ride requests.</p>
-        <label>Full Name</label>
-        <input type="text" id="dd-name" placeholder="Your name">
-        <div class="field-error" id="dd-name-err">Please enter your name.</div>
+       <p class="subtitle">Only users with a completed DD profile can view and accept ride requests. Names are not collected or displayed.</p>
         <label>Phone Number</label>
         <input type="tel" id="dd-phone" placeholder="(555) 555-5555">
         <div class="field-error" id="dd-phone-err">Please enter a valid phone number.</div>
@@ -299,7 +293,7 @@
       <div id="req-no-profile" class="card" style="display:none;">
         <div class="empty">
           <span class="icon">👤</span>
-          Save your profile first &mdash; name, phone, and supervisor order &mdash; before requesting a ride.
+          Save your profile first &mdash; Phone Number and Supervisor order &mdash; before requesting a ride.
         </div>
         <button class="btn btn-outline" onclick="goTo('rider-profile')">Go to My Profile</button>
       </div>
@@ -396,7 +390,7 @@ function renderHomeChecklist(){
     {
       done: !!profile,
       title: 'Set up My Profile',
-      sub: profile ? ('Saved &middot; ' + (profile.supervisors?.length||0) + ' supervisor(s) on file') : 'Add your name, phone, and supervisor call order',
+      sub: profile ? ('Saved &middot; ' + (profile.supervisors?.length||0) + ' supervisor(s) on file') : 'Add your Phone Number and Supervisor Call Order',
       view: 'rider-profile'
     },
     {
@@ -445,92 +439,114 @@ function setInvalid(inputEl, errEl, isInvalid){
 function isValidPhone(v){ return /\d{7,}/.test(v.replace(/\D/g,'')); }
 
 /* ---------- RIDER PROFILE ---------- */
-function buildSupervisorRows(existing){
-  const wrap = document.getElementById('sup-rows');
-  wrap.innerHTML='';
-  for(let i=1;i<=6;i++){
-    const sup = (existing||[]).find(s=>s.order===i) || {name:'',phone:''};
-    const row = document.createElement('div');
-    row.className='sup-row';
+function buildSupervisorRows(existing = []) {
+  const wrap = document.getElementById("sup-rows");
+  wrap.innerHTML = "";
+  for (let i = 1; i <= 6; i++) {
+    const sup = existing.find(s => s.order === i) || { phone: "" };
+    const row = document.createElement("div");
+    row.className = "sup-row";
     row.innerHTML = `
       <div class="badge-row">
         <span class="badge">${i}</span>
-        <span class="badge-label">${i===1?'Contacted first':(i===6?'Last resort':'Backup #'+i)}</span>
+        <span class="badge-label">
+          ${i === 1 ? "Contacted first" : i === 6 ? "Last resort" : "Backup contact"}
+        </span>
       </div>
-      <div class="row">
-        <div>
-          <label>Name</label>
-          <input type="text" data-sup="${i}-name" placeholder="Supervisor name" value="${sup.name.replace(/"/g,'&quot;')}">
-        </div>
-        <div>
-          <label>Phone</label>
-          <input type="tel" data-sup="${i}-phone" placeholder="(555) 555-5555" value="${sup.phone.replace(/"/g,'&quot;')}">
-        </div>
-      </div>`;
+      <label>Supervisor ${i} Phone Number</label>
+      <input
+        type="tel"
+        data-sup="${i}-phone"
+        placeholder="555-555-5555"
+        value="${(sup.phone || "").replace(/"/g, "&quot;")}"
+      >
+    `;
     wrap.appendChild(row);
   }
 }
 
-function loadRiderProfileIntoForm(){
-  const p = load(LS_PROFILE, null);
-  buildSupervisorRows(p ? p.supervisors : []);
-  document.getElementById('r-name').value = p ? p.name : '';
-  document.getElementById('r-phone').value = p ? p.phone : '';
+function loadRiderProfileIntoForm() {
+  const profile = load(LSPROFILE, null);
+
+  buildSupervisorRows(profile ? profile.supervisors : []);
+  document.getElementById("r-phone").value = profile ? profile.phone || "" : "";
 }
 loadRiderProfileIntoForm();
 
-document.getElementById('save-profile').addEventListener('click', ()=>{
-  const nameEl = document.getElementById('r-name');
-  const phoneEl = document.getElementById('r-phone');
-  const name = nameEl.value.trim();
+document.getElementById("save-profile").addEventListener("click", () => {
+  const phoneEl = document.getElementById("r-phone");
   const phone = phoneEl.value.trim();
-
-  const nameInvalid = !name;
   const phoneInvalid = !isValidPhone(phone);
-  setInvalid(nameEl, document.getElementById('r-name-err'), nameInvalid);
-  setInvalid(phoneEl, document.getElementById('r-phone-err'), phoneInvalid);
-  if(nameInvalid || phoneInvalid){ toast('Please fix the highlighted fields.', 'error'); return; }
+  setInvalid(
+    phoneEl,
+    document.getElementById("r-phone-err"),
+    phoneInvalid
+  );
 
-  const supervisors=[];
-  for(let i=1;i<=6;i++){
-    const n = document.querySelector(`[data-sup="${i}-name"]`).value.trim();
-    const ph = document.querySelector(`[data-sup="${i}-phone"]`).value.trim();
-    if(n && ph) supervisors.push({order:i, name:n, phone:ph});
+  if (phoneInvalid) {
+    toast("Please fix the highlighted phone number.", "error");
+    return;
   }
-  save(LS_PROFILE, {name, phone, supervisors});
-  toast('Profile saved.', 'success');
+  const supervisors = [];
+  for (let i = 1; i <= 6; i++) {
+    const phoneInput = document.querySelector(`[data-sup="${i}-phone"]`);
+    const supervisorPhone = phoneInput.value.trim();
+
+    if (supervisorPhone) {
+      supervisors.push({
+        order: i,
+        phone: supervisorPhone
+      });
+    }
+  }
+
+  save(LSPROFILE, {
+    phone,
+    supervisors
+  });
+  toast("Profile saved.", "success");
   updateNavDots();
+  renderHomeChecklist();
 });
 
 /* ---------- DD PROFILE ---------- */
-function loadDDProfileIntoForm(){
-  const d = load(LS_DD, null);
-  if(d){
-    document.getElementById('dd-name').value = d.name;
-    document.getElementById('dd-phone').value = d.phone;
-    document.getElementById('dd-vehicle').value = d.vehicle||'';
-    document.getElementById('dd-available').checked = !!d.available;
-  }
+function loadDDProfileIntoForm() {
+  const dd = load(LSDD, null);
+
+  document.getElementById("dd-phone").value = dd ? dd.phone || "" : "";
+  document.getElementById("dd-vehicle").value = dd ? dd.vehicle || "" : "";
+  document.getElementById("dd-available").checked = !!(dd && dd.available);
 }
 loadDDProfileIntoForm();
 
-document.getElementById('save-dd-profile').addEventListener('click', ()=>{
-  const nameEl = document.getElementById('dd-name');
-  const phoneEl = document.getElementById('dd-phone');
-  const name = nameEl.value.trim();
+document.getElementById("save-dd-profile").addEventListener("click", () => {
+  const phoneEl = document.getElementById("dd-phone");
   const phone = phoneEl.value.trim();
-  const vehicle = document.getElementById('dd-vehicle').value.trim();
-  const available = document.getElementById('dd-available').checked;
+  const vehicle = document.getElementById("dd-vehicle").value.trim();
+  const available = document.getElementById("dd-available").checked;
 
-  const nameInvalid = !name;
   const phoneInvalid = !isValidPhone(phone);
-  setInvalid(nameEl, document.getElementById('dd-name-err'), nameInvalid);
-  setInvalid(phoneEl, document.getElementById('dd-phone-err'), phoneInvalid);
-  if(nameInvalid || phoneInvalid){ toast('Please fix the highlighted fields.', 'error'); return; }
 
-  save(LS_DD, {name, phone, vehicle, available});
-  toast('DD profile saved.', 'success');
+  setInvalid(
+    phoneEl,
+    document.getElementById("dd-phone-err"),
+    phoneInvalid
+  );
+
+  if (phoneInvalid) {
+    toast("Please fix the highlighted phone number.", "error");
+    return;
+  }
+
+  save(LSDD, {
+    phone,
+    vehicle,
+    available
+  });
+
+  toast("DD profile saved.", "success");
   updateNavDots();
+  renderDashboard();
 });
 
 document.getElementById('dd-available').addEventListener('change', (e)=>{
@@ -565,18 +581,17 @@ document.getElementById('submit-request').addEventListener('click', ()=>{
   setInvalid(dropoffEl, null, false);
 
   const requests = load(LS_REQUESTS, []);
-  const req = {
-    id: uid(),
-    riderName: profile.name,
-    riderPhone: profile.phone,
-    supervisors: profile.supervisors,
-    pickup: pendingLocation,
-    dropoff,
-    status: 'pending',
-    notifiedIndex: -1,
-    createdAt: Date.now(),
-    assignedDD: null
-  };
+ const req = {
+  id: uid(),
+  riderPhone: profile.phone,
+  supervisors: profile.supervisors,
+  pickup: pendingLocation,
+  dropoff,
+  status: "pending",
+  notifiedIndex: -1,
+  createdAt: Date.now(),
+  assignedDD: null
+};
   requests.push(req);
   save(LS_REQUESTS, requests);
   document.getElementById('dropoff').value='';
@@ -614,7 +629,7 @@ function renderRequestView(){
     <p class="muted">Drop-off: ${req.dropoff}</p>`;
 
   if(req.status==='accepted' && req.assignedDD){
-    html += `<p class="muted"><strong>${req.assignedDD.name}</strong> is coming to pick you up. Phone: <a class="link" href="tel:${req.assignedDD.phone}">${req.assignedDD.phone}</a></p>`;
+    html += `<p class="muted"><strong>Designated Driver</strong</strong> is coming to pick you up. Phone: <a class="link" href="tel:${req.assignedDD.phone}">${req.assignedDD.phone}</a></p>`;
   }
 
   if(req.status==='pending'){
@@ -655,7 +670,7 @@ function renderEscalationCard(req){
     const s = sups[idx];
     body += `<div class="sup-row">
       <div class="badge-row"><span class="badge">${s.order}</span><span class="badge-label">Currently contacting</span></div>
-      <h3>${s.name}</h3>
+      <h3>Supervisor ${s.order}</h3>
       <div class="btn-row">
         <a class="btn btn-success btn-half" href="tel:${s.phone}">📞 Call</a>
         <a class="btn btn-outline btn-half" href="sms:${s.phone}">💬 Text</a>
@@ -701,7 +716,7 @@ function renderDashboard(){
   } else {
     pending.forEach(r=>{
       html += `<div class="request-item">
-        <p><strong>${r.riderName}</strong> <span class="muted">&middot; ${new Date(r.createdAt).toLocaleTimeString()}</span></p>
+        <p><strong>Rider</strong> <span class="muted">&middot; ${new Date(r.createdAt).toLocaleTimeString()}</span></p>
         <p class="muted">Pickup: <a class="link" target="_blank" href="https://www.google.com/maps?q=${r.pickup.lat},${r.pickup.lng}">exact location</a></p>
         <p class="muted">Drop-off: ${r.dropoff}</p>
         <div class="btn-row">
@@ -733,7 +748,7 @@ function acceptRequest(id){
   if(!dd){ toast('Set up your DD profile first.', 'error'); return; }
   const requests = load(LS_REQUESTS, []);
   const r = requests.find(x=>x.id===id);
-  if(r){ r.status='accepted'; r.assignedDD={name:dd.name, phone:dd.phone, vehicle:dd.vehicle}; }
+  if(r){ r.status='accepted'; r.assignedDD={phone:dd.phone, vehicle:dd.vehicle}; }
   save(LS_REQUESTS, requests);
   toast('Request accepted. Drive safe!', 'success');
   renderDashboard();
