@@ -34,10 +34,9 @@
     background:var(--navy2); display:flex; flex-direction:column;
     box-shadow:0 0 50px rgba(0,0,0,.55);
     position:relative;
-    padding-bottom:74px; /* room for bottom nav */
+    padding-bottom:74px;
   }
 
-  /* ---------- HERO HEADER ---------- */
   .hero{
     position:relative;
     height:190px;
@@ -59,7 +58,6 @@
   }
   .hero p{margin:3px 0 0; font-size:12.5px; color:#dbe1f0; text-shadow:0 1px 6px rgba(0,0,0,.6);}
 
-  /* ---------- MAIN ---------- */
   main{flex:1; padding:16px 16px 8px;}
   .view{display:none; animation:fadeIn .25s ease;}
   .view.active{display:block;}
@@ -91,7 +89,6 @@
   .row{display:flex; gap:10px;}
   .row > div{flex:1;}
 
-  /* ---------- PROGRESS CHECKLIST ---------- */
   .checklist{display:flex; flex-direction:column; gap:10px;}
   .check-item{
     display:flex; align-items:center; gap:12px; padding:12px; border-radius:12px;
@@ -110,7 +107,6 @@
   .check-text .t2{font-size:11.5px; color:var(--muted); margin-top:1px;}
   .check-arrow{color:var(--muted); font-size:16px;}
 
-  /* ---------- SUPERVISOR ROWS ---------- */
   .sup-row{
     border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; background:var(--card2);
     transition:border-color .15s;
@@ -123,7 +119,6 @@
   }
   .sup-row .badge-label{font-size:11px; color:var(--muted); font-weight:600;}
 
-  /* ---------- BUTTONS ---------- */
   button.btn, a.btn{
     display:inline-block; width:100%; padding:13px; border-radius:12px; border:none;
     font-size:14.5px; font-weight:700; cursor:pointer; margin-top:12px; text-align:center;
@@ -168,7 +163,6 @@
   .empty{text-align:center; color:var(--muted); font-size:13px; padding:26px 10px;}
   .empty .icon{font-size:30px; display:block; margin-bottom:8px; opacity:.7;}
 
-  /* ---------- BOTTOM NAV ---------- */
   nav.bottom-nav{
     position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:100%; max-width:480px;
     display:flex; background:#0a1730; border-top:1px solid var(--border);
@@ -187,7 +181,6 @@
   }
   nav.bottom-nav button .dot.show{display:block;}
 
-  /* ---------- TOAST ---------- */
   #toast-wrap{
     position:fixed; left:50%; transform:translateX(-50%); top:14px; width:calc(100% - 32px); max-width:448px;
     z-index:50; display:flex; flex-direction:column; gap:8px; pointer-events:none;
@@ -211,7 +204,17 @@
 
 <div class="phone">
   <div class="hero">
-    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/61dKSlAAAQAAAAEAAFdAanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAAGJhqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjQ0YmE5ZjI5LTl[...]
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 800" style="width:100%; height:100%; display:block;">
+      <defs>
+        <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#1a4d7a;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#0d2a4a;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="1600" height="800" fill="url(#sky)"/>
+      <circle cx="200" cy="150" r="80" fill="#fff9e6" opacity="0.9"/>
+      <path d="M 100 400 Q 400 200 700 400 T 1500 400" stroke="#fff9e6" stroke-width="3" fill="none" opacity="0.3"/>
+    </svg>
     <div class="hero-overlay">
       <h1>Whiteman Ride-Share </h1>
       <p>Safe Ride Network &middot; Airmen Against Drunk Driving</p>
@@ -223,9 +226,9 @@
     <!-- HOME -->
     <section id="view-home" class="view active">
       <div class="card" style="background:linear-gradient(180deg,var(--card2),var(--card)); border-color:var(--gold);">
-        <h2><span class="icon">☎️</span> Whiteman Ride-Share  Hotline</h2>
+        <h2><span class="icon">☎️</span> Whiteman Ride-Share Hotline</h2>
         <p class="subtitle">Need a ride right now? Call the hotline directly.</p>
-        <a class="btn btn-primary" href="tel:2282392533">📞 Call 660-624-2732</a>
+        <a class="btn btn-primary" href="tel:6606242732">📞 Call 660-624-2732</a>
       </div>
 
       <div class="card">
@@ -246,7 +249,7 @@
 
       <div class="banner"><span class="icon">ℹ️</span><span>This runs on this device/browser only. Call and text buttons open your phone's real dialer and messages app.</span></div>
 
-      <div class="banner"><span class="icon">🛠️</span><span>Having technical issues with the app? Call <a class="link" href="tel:660-624-2732" style="color:var(--gold-light);">660-624-2732</a> for help.</span></div>
+      <div class="banner"><span class="icon">🛠️</span><span>Having technical issues with the app? Call <a class="link" href="tel:6606242732" style="color:var(--gold-light);">660-624-2732</a> for help.</span></div>
     </section>
 
     <!-- RIDER PROFILE -->
@@ -331,7 +334,7 @@
   </main>
 
   <footer class="app-footer">
-    Whiteman Ride-Share  prototype &middot; <button id="reset-demo">Reset demo data</button>
+    Whiteman Ride-Share prototype &middot; <button id="reset-demo">Reset demo data</button>
   </footer>
 
   <nav class="bottom-nav">
