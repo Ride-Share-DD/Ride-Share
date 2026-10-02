@@ -51,6 +51,11 @@
       border-bottom: 1px solid rgba(255,255,255,0.04);
     }
 
+    .hero-wrapper {
+      position: relative;
+      height: 100%;
+    }
+
     .hero svg {
       width: 100%;
       height: 100%;
@@ -65,8 +70,39 @@
       background: linear-gradient(180deg, rgba(6,15,34,0.15) 0%, rgba(6,15,34,0.55) 60%, rgba(6,15,34,0.96) 100%);
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+      padding: 12px 18px 14px;
+    }
+
+    .hero-top {
+      display: flex;
       justify-content: flex-end;
-      padding: 16px 18px 14px;
+      align-items: center;
+    }
+
+    .hero-title {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .gear-btn {
+      background: none;
+      border: none;
+      color: var(--gold-light);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, filter 0.2s;
+    }
+
+    .gear-btn:hover {
+      transform: rotate(20deg);
+      filter: brightness(1.2);
     }
 
     .hero h1 {
@@ -339,55 +375,55 @@
     .switch input:checked + .slider:before { transform: translateX(22px); }
 
    .banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+   display: flex;
+   align-items: flex-start;
+   gap: 10px;
 
-  width: 100%;
-  margin: 0 0 14px;
-  padding: 12px 14px;
+   width: 100%;
+   margin: 0 0 14px;
+   padding: 12px 14px;
 
-  border: 1px solid var(--gold);
-  border-radius: 12px;
-  background: linear-gradient(135deg, #2b230d, #1b170c);
-  color: var(--gold-light);
+   border: 1px solid var(--gold);
+   border-radius: 12px;
+   background: linear-gradient(135deg, #2b230d, #1b170c);
+   color: var(--gold-light);
 
-  font-size: 12.5px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
-}
+   font-size: 12.5px;
+   line-height: 1.5;
+   overflow-wrap: anywhere;
+   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+ }
 
-.banner .icon {
-  flex: 0 0 auto;
-  font-size: 16px;
-  line-height: 1.5;
-}
+ .banner .icon {
+   flex: 0 0 auto;
+   font-size: 16px;
+   line-height: 1.5;
+ }
 
-.banner span:last-child {
-  min-width: 0;
-  flex: 1;
-}
+ .banner span:last-child {
+   min-width: 0;
+   flex: 1;
+ }
 
-.banner a.link {
-  color: var(--gold-light);
-  font-weight: 700;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
-}
+ .banner a.link {
+   color: var(--gold-light);
+   font-weight: 700;
+   text-decoration-thickness: 1px;
+   text-underline-offset: 2px;
+ }
 
-.banner a.link:hover,
-.banner a.link:focus-visible {
-  color: #fff3b5;
-}
+ .banner a.link:hover,
+ .banner a.link:focus-visible {
+   color: #fff3b5;
+ }
 
-@media (max-width: 360px) {
-  .banner {
-    padding: 11px 12px;
-    font-size: 12px;
-    gap: 8px;
-  }
-}
+ @media (max-width: 360px) {
+   .banner {
+     padding: 11px 12px;
+     font-size: 12px;
+     gap: 8px;
+   }
+ }
 
 
     .banner .icon { font-size: 16px; flex: 0 0 auto; }
@@ -486,6 +522,68 @@
       font-size: 10.5px;
       cursor: pointer;
     }
+
+    .settings-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-modal.active {
+      display: flex;
+    }
+
+    .settings-modal-content {
+      background: var(--navy2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      max-width: 300px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .settings-modal-content h2 {
+      margin: 0 0 16px;
+      font-size: 18px;
+      color: var(--gold-light);
+      text-align: center;
+    }
+
+    .settings-modal-content button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .settings-modal-content button:hover {
+      border-color: var(--gold);
+    }
+
+    .settings-modal-content .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 24px;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -493,21 +591,28 @@
 
   <div class="phone">
     <header class="hero">
-      <svg viewBox="0 0 1600 800" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <defs>
-          <linearGradient id="sky" x1="0%" x2="0%" y1="0%" y2="100%">
-            <stop offset="0%" stop-color="#1a4d7a"/>
-            <stop offset="100%" stop-color="#0d2a4a"/>
-          </linearGradient>
-        </defs>
-        <rect width="1600" height="800" fill="url(#sky)"/>
-        <circle cx="200" cy="150" r="80" fill="#fff9e6" opacity="0.9"/>
-        <path d="M100 400 Q400 200 700 400 T1500 400" stroke="#fff9e6" stroke-width="3" fill="none" opacity="0.3"/>
-        <path d="M80 520 Q350 350 760 520 T1500 530" stroke="#dfeaff" stroke-width="2" fill="none" opacity="0.2"/>
-      </svg>
-      <div class="hero-overlay">
-        <h1>Whiteman Ride-Share</h1>
-        <p>Safe Ride Network &middot; Airmen Against Drunk Driving</p>
+      <div class="hero-wrapper">
+        <svg viewBox="0 0 1600 800" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="sky" x1="0%" x2="0%" y1="0%" y2="100%">
+              <stop offset="0%" stop-color="#1a4d7a"/>
+              <stop offset="100%" stop-color="#0d2a4a"/>
+            </linearGradient>
+          </defs>
+          <rect width="1600" height="800" fill="url(#sky)"/>
+          <circle cx="200" cy="150" r="80" fill="#fff9e6" opacity="0.9"/>
+          <path d="M100 400 Q400 200 700 400 T1500 400" stroke="#fff9e6" stroke-width="3" fill="none" opacity="0.3"/>
+          <path d="M80 520 Q350 350 760 520 T1500 530" stroke="#dfeaff" stroke-width="2" fill="none" opacity="0.2"/>
+        </svg>
+        <div class="hero-overlay">
+          <div class="hero-top">
+            <button class="gear-btn" id="settings-btn">⚙️</button>
+          </div>
+          <div class="hero-title">
+            <h1>Whiteman Ride-Share</h1>
+            <p>Safe Ride Network &middot; Airmen Against Drunk Driving</p>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -535,7 +640,7 @@
           </ol>
         </div>
 
-        <div class="banner"><span class="icon">ℹ️</span><span>This app runs on your device. Call and text buttons open your phone’s real dialer and messages app.</span></div>
+        <div class="banner"><span class="icon">ℹ️</span><span>This app runs on your device. Call and text buttons open your phone's real dialer and messages app.</span></div>
         <div class="banner"><span class="icon">🛠️</span><span>Having technical issues? Call <a class="link" href="tel:6606242732">660-624-2732</a> for help.</span></div>
       </section>
 
@@ -617,7 +722,7 @@
     </main>
 
     <footer class="app-footer">
-      Whiteman Ride-Share prototype &middot; <button id="reset-demo">Reset demo data</button>
+      Whiteman Ride-Share prototype
     </footer>
 
     <nav class="bottom-nav">
@@ -627,6 +732,14 @@
       <button data-view="request"><span class="nav-icon">📍</span>Request<span class="dot" id="dot-request"></span></button>
       <button data-view="dashboard"><span class="nav-icon">📋</span>Dashboard<span class="dot" id="dot-dash"></span></button>
     </nav>
+
+    <div id="settings-modal" class="settings-modal">
+      <div class="settings-modal-content">
+        <button class="close-btn" id="close-settings">×</button>
+        <h2>Settings</h2>
+        <button id="reset-demo">Reset Demo Data</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -656,6 +769,9 @@
       dropoff: document.getElementById('dropoff'),
       submitRequest: document.getElementById('submit-request'),
       resetDemo: document.getElementById('reset-demo'),
+      settingsBtn: document.getElementById('settings-btn'),
+      settingsModal: document.getElementById('settings-modal'),
+      closeSettings: document.getElementById('close-settings'),
       navButtons: Array.from(document.querySelectorAll('.bottom-nav button')),
       viewPanels: Array.from(document.querySelectorAll('.view')),
       dotProfile: document.getElementById('dot-profile'),
@@ -863,7 +979,7 @@
       }
 
       const currentIndex = request.notifiedIndex ?? -1;
-      let card = `<div class="card"><h2><span class="icon">📞</span> Last Resort: Supervisor Contact</h2><p class="subtitle">If no driver accepts, your supervisors are contacted one at a time.</p>`;
+      let card = `<div class="card"><h2><span class="icon">📞</span> Last Resort: Supervisor Contact</h2><p class="subtitle">If no driver accepts, your supervisors are contacted one at a time.<[...]
 
       if (currentIndex === -1) {
         card += `<button class="btn btn-outline" data-notify-next="${request.id}">No DD available &mdash; Start supervisor chain</button>`;
@@ -877,7 +993,7 @@
               <a class="btn btn-success btn-half" href="tel:${supervisor.phone}">📞 Call</a>
               <a class="btn btn-outline btn-half" href="sms:${supervisor.phone}">💬 Text</a>
             </div>
-            ${currentIndex + 1 < supervisors.length ? `<button class="btn btn-outline btn-small" data-notify-next="${request.id}">No answer &mdash; try next supervisor</button>` : `<p class="muted" style="margin-top:8px;">This is the final contact in your saved order.</p>`}
+            ${currentIndex + 1 < supervisors.length ? `<button class="btn btn-outline btn-small" data-notify-next="${request.id}">No answer &mdash; try next supervisor</button>` : `<p class="mute[...]
           </div>
         `;
       }
@@ -999,217 +1115,176 @@
       if (index >= 0) {
         requests[index].status = 'cancelled';
         save(LS_REQUESTS, requests);
+        toast('Request cancelled.', 'success');
+        updateNavDots();
+        renderRequestView();
+        renderDashboard();
       }
-      toast('Request cancelled.', 'success');
-      renderRequestView();
-      renderHomeChecklist();
-      updateNavDots();
     }
 
-    function notifyNext(id) {
+    function notifyNextSupervisor(id) {
       const requests = load(LS_REQUESTS, []);
-      const request = requests.find((item) => item.id === id);
-      if (!request) return;
-
-      const maxIndex = (request.supervisors || []).length - 1;
-      const nextIndex = (request.notifiedIndex ?? -1) + 1;
-      request.notifiedIndex = Math.min(nextIndex, maxIndex);
-      save(LS_REQUESTS, requests);
-      renderRequestView();
+      const req = requests.find((item) => item.id === id);
+      if (req) {
+        req.notifiedIndex = (req.notifiedIndex ?? -1) + 1;
+        save(LS_REQUESTS, requests);
+        renderRequestView();
+      }
     }
 
     function acceptRequest(id) {
       const dd = load(LS_DD, null);
-      if (!dd) {
-        toast('Set up your DD profile first.', 'error');
-        return;
-      }
-
       const requests = load(LS_REQUESTS, []);
-      const request = requests.find((item) => item.id === id);
-      if (!request || request.status !== 'pending') {
-        toast('That request is no longer available.', 'error');
+      const req = requests.find((item) => item.id === id);
+      if (req && dd) {
+        req.status = 'accepted';
+        req.assignedDD = { phone: dd.phone, vehicle: dd.vehicle };
+        save(LS_REQUESTS, requests);
+        toast('Request accepted!', 'success');
+        updateNavDots();
         renderDashboard();
-        return;
       }
-
-      request.status = 'accepted';
-      request.assignedDD = { phone: dd.phone, vehicle: dd.vehicle };
-      save(LS_REQUESTS, requests);
-      toast('Request accepted. Drive safe!', 'success');
-      renderDashboard();
-      renderRequestView();
-      renderHomeChecklist();
-      updateNavDots();
     }
 
     function declineRequest(id) {
       const requests = load(LS_REQUESTS, []);
-      const request = requests.find((item) => item.id === id);
-      if (request && request.status === 'pending') {
-        request.status = 'cancelled';
+      const index = requests.findIndex((item) => item.id === id);
+      if (index >= 0) {
+        requests.splice(index, 1);
         save(LS_REQUESTS, requests);
-      }
-      toast('Request skipped.', 'success');
-      renderDashboard();
-      renderHomeChecklist();
-      updateNavDots();
-    }
-
-    function bindEvents() {
-      refs.navButtons.forEach((button) => {
-        button.addEventListener('click', () => goTo(button.dataset.view));
-      });
-
-      document.addEventListener('click', (event) => {
-        const goTarget = event.target.closest('[data-go]');
-        if (goTarget) {
-          goTo(goTarget.dataset.go);
-          return;
-        }
-
-        const cancelTarget = event.target.closest('[data-cancel-request]');
-        if (cancelTarget) {
-          cancelRequest(cancelTarget.dataset.cancelRequest);
-          return;
-        }
-
-        const notifyTarget = event.target.closest('[data-notify-next]');
-        if (notifyTarget) {
-          notifyNext(notifyTarget.dataset.notifyNext);
-          return;
-        }
-
-        const actionTarget = event.target.closest('[data-action]');
-        if (!actionTarget) return;
-
-        const { action, id } = actionTarget.dataset;
-        if (action === 'accept-request') acceptRequest(id);
-        if (action === 'decline-request') declineRequest(id);
-      });
-
-      refs.saveProfile.addEventListener('click', saveProfile);
-      refs.saveDDProfile.addEventListener('click', saveDDProfile);
-
-      refs.ddAvailable.addEventListener('change', (event) => {
-        const dd = load(LS_DD, null);
-        if (dd) {
-          dd.available = event.target.checked;
-          save(LS_DD, dd);
-          toast(event.target.checked ? 'You are now visible as available.' : 'You are now offline.', 'success');
-          renderDashboard();
-          renderHomeChecklist();
-        }
-      });
-
-      refs.getLocation.addEventListener('click', () => {
-        if (!navigator.geolocation) {
-          refs.locStatus.textContent = 'Geolocation is not supported by this browser.';
-          return;
-        }
-
-        const token = ++state.geoToken;
-        refs.locStatus.textContent = 'Getting your exact location...';
-
-        navigator.geolocation.getCurrentPosition((position) => {
-          if (token !== state.geoToken) return;
-
-          state.pendingLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: position.coords.accuracy
-          };
-
-          refs.locStatus.innerHTML = `📍 Location shared (accuracy ~${Math.round(position.coords.accuracy)}m). <a class="link" target="_blank" href="https://www.google.com/maps?q=${state.pendingLocation.lat},${state.pendingLocation.lng}">Open map</a>`;
-          toast('Location shared.', 'success');
-        }, (error) => {
-          if (token !== state.geoToken) return;
-          refs.locStatus.textContent = 'Could not get your location (' + error.message + ').';
-          toast('Could not get your location.', 'error');
-        }, {
-          enableHighAccuracy: true,
-          timeout: 10000
-        });
-      });
-
-      refs.submitRequest.addEventListener('click', () => {
-        const profile = load(LS_PROFILE, null);
-        if (!profile) {
-          toast('Please save your profile first.', 'error');
-          goTo('rider-profile');
-          return;
-        }
-
-        const requests = load(LS_REQUESTS, []);
-        if (requests.some((req) =>
-  req.riderPhone === profile.phone && req.status === 'pending'
-)) {
-  toast('You already have a pending ride request.', 'error');
-  return;
-}
-
-        const dropoff = refs.dropoff.value.trim();
-        if (!state.pendingLocation) {
-          toast('Please share your exact location first.', 'error');
-          return;
-        }
-
-        if (!dropoff) {
-          refs.dropoff.classList.add('invalid');
-          toast('Please enter a drop-off destination.', 'error');
-          return;
-        }
-
-        refs.dropoff.classList.remove('invalid');
-
-        const newRequest = {
-          id: uid(),
-          riderPhone: profile.phone,
-          supervisors: profile.supervisors || [],
-          pickup: state.pendingLocation,
-          dropoff,
-          status: 'pending',
-          notifiedIndex: -1,
-          createdAt: Date.now(),
-          assignedDD: null
-        };
-
-        requests.push(newRequest);
-        save(LS_REQUESTS, requests);
-
-        state.pendingLocation = null;
-        refs.dropoff.value = '';
-        refs.locStatus.textContent = 'Location not yet shared.';
-        toast('Ride requested. Looking for a driver...', 'success');
-        renderRequestView();
-        renderHomeChecklist();
+        toast('Request declined.', 'success');
         updateNavDots();
-      });
-
-      refs.resetDemo.addEventListener('click', () => {
-        if (!confirm('Clear all saved profiles and requests on this device?')) return;
-        localStorage.removeItem(LS_PROFILE);
-        localStorage.removeItem(LS_DD);
-        localStorage.removeItem(LS_REQUESTS);
-        state.pendingLocation = null;
-        refs.dropoff.value = '';
-        refs.locStatus.textContent = 'Location not yet shared.';
-        loadRiderProfileIntoForm();
-        loadDDProfileIntoForm();
-        renderRequestView();
         renderDashboard();
-        renderHomeChecklist();
-        toast('Demo data cleared.');
-      });
+      }
     }
+
+    function resetDemo() {
+      localStorage.removeItem(LS_PROFILE);
+      localStorage.removeItem(LS_DD);
+      localStorage.removeItem(LS_REQUESTS);
+      toast('Demo data cleared.', 'success');
+      updateNavDots();
+      renderHomeChecklist();
+      loadRiderProfileIntoForm();
+      loadDDProfileIntoForm();
+      renderRequestView();
+      renderDashboard();
+      goTo('home');
+      refs.settingsModal.classList.remove('active');
+    }
+
+    refs.settingsBtn.addEventListener('click', () => {
+      refs.settingsModal.classList.add('active');
+    });
+
+    refs.closeSettings.addEventListener('click', () => {
+      refs.settingsModal.classList.remove('active');
+    });
+
+    refs.settingsModal.addEventListener('click', (e) => {
+      if (e.target === refs.settingsModal) {
+        refs.settingsModal.classList.remove('active');
+      }
+    });
+
+    refs.resetDemo.addEventListener('click', resetDemo);
+    refs.saveProfile.addEventListener('click', saveProfile);
+    refs.saveDDProfile.addEventListener('click', saveDDProfile);
+
+    refs.navButtons.forEach((button) => {
+      button.addEventListener('click', (e) => {
+        goTo(button.dataset.view);
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target.dataset.go) goTo(e.target.dataset.go);
+      if (e.target.dataset.cancelRequest) cancelRequest(e.target.dataset.cancelRequest);
+      if (e.target.dataset.notifyNext) notifyNextSupervisor(e.target.dataset.notifyNext);
+      if (e.target.dataset.action === 'accept-request') acceptRequest(e.target.dataset.id);
+      if (e.target.dataset.action === 'decline-request') declineRequest(e.target.dataset.id);
+    });
+
+    refs.getLocation.addEventListener('click', () => {
+      state.geoToken++;
+      const currentToken = state.geoToken;
+      refs.getLocation.textContent = '📍 Getting location...';
+      refs.getLocation.disabled = true;
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            if (currentToken === state.geoToken) {
+              state.pendingLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              };
+              refs.locStatus.textContent = '✅ Location shared: ' + Math.round(state.pendingLocation.lat * 10000) / 10000 + ', ' + Math.round(state.pendingLocation.lng * 10000) / 10000;
+              refs.getLocation.textContent = '✅ Location shared';
+              refs.getLocation.disabled = false;
+            }
+          },
+          (error) => {
+            if (currentToken === state.geoToken) {
+              toast('Unable to get location. Check browser permissions.', 'error');
+              refs.getLocation.textContent = '📍 Share My Exact Location';
+              refs.getLocation.disabled = false;
+            }
+          }
+        );
+      } else {
+        toast('Geolocation not supported by this browser.', 'error');
+        refs.getLocation.textContent = '📍 Share My Exact Location';
+        refs.getLocation.disabled = false;
+      }
+    });
+
+    refs.submitRequest.addEventListener('click', () => {
+      const dropoff = refs.dropoff.value.trim();
+      if (!dropoff) {
+        toast('Please enter a destination.', 'error');
+        return;
+      }
+
+      if (!state.pendingLocation) {
+        toast('Please share your location first.', 'error');
+        return;
+      }
+
+      const profile = load(LS_PROFILE, null);
+      if (!profile) {
+        toast('Please save your profile first.', 'error');
+        return;
+      }
+
+      const requests = load(LS_REQUESTS, []);
+      const newRequest = {
+        id: uid(),
+        riderPhone: profile.phone,
+        pickup: state.pendingLocation,
+        dropoff,
+        supervisors: profile.supervisors || [],
+        status: 'pending',
+        createdAt: Date.now()
+      };
+
+      requests.push(newRequest);
+      save(LS_REQUESTS, requests);
+      toast('Ride request submitted!', 'success');
+
+      state.pendingLocation = null;
+      refs.dropoff.value = '';
+      refs.getLocation.textContent = '📍 Share My Exact Location';
+      refs.locStatus.textContent = 'Location not yet shared.';
+
+      updateNavDots();
+      renderRequestView();
+      renderDashboard();
+    });
 
     loadRiderProfileIntoForm();
     loadDDProfileIntoForm();
-    bindEvents();
     renderHomeChecklist();
-    renderRequestView();
-    renderDashboard();
-    updateNavDots();
   </script>
 </body>
 </html>
