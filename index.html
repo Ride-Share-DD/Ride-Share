@@ -211,7 +211,7 @@
 
 <div class="phone">
   <div class="hero">
-    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/61dKSlAAAQAAAAEAAFdAanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAAGJhqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjQ0YmE5Zj[...]
+    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/61dKSlAAAQAAAAEAAFdAanVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAAGJhqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjQ0YmE5ZjI5LTl[...]
     <div class="hero-overlay">
       <h1>Whiteman Ride-Share </h1>
       <p>Safe Ride Network &middot; Airmen Against Drunk Driving</p>
@@ -383,20 +383,20 @@ const state = {
   geoToken: 0
 };
 
-function load(key, fallback){
+function load(key, fallback) {
   try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; }
   catch (e) { return fallback; }
 }
 
-function save(key, val){
+function save(key, val) {
   localStorage.setItem(key, JSON.stringify(val));
 }
 
-function uid(){
+function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-function toast(msg, type){
+function toast(msg, type) {
   const el = document.createElement('div');
   el.className = 'toast' + (type ? ' ' + type : '');
   const icon = type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
@@ -409,16 +409,16 @@ function toast(msg, type){
   }, 2600);
 }
 
-function setInvalid(inputEl, errEl, isInvalid){
+function setInvalid(inputEl, errEl, isInvalid) {
   inputEl.classList.toggle('invalid', isInvalid);
   if (errEl) errEl.classList.toggle('show', isInvalid);
 }
 
-function isValidPhone(v){
+function isValidPhone(v) {
   return /\d{7,}/.test(v.replace(/\D/g, ''));
 }
 
-function goTo(viewName){
+function goTo(viewName) {
   refs.navButtons.forEach((b) => b.classList.toggle('active', b.dataset.view === viewName));
   refs.viewPanels.forEach((v) => v.classList.remove('active'));
   const target = document.getElementById('view-' + viewName);
@@ -430,13 +430,15 @@ function goTo(viewName){
   if (viewName === 'home') renderHomeChecklist();
 }
 
-function updateNavDots(){
+function updateNavDots() {
   const profile = load(LS_PROFILE, null);
   const dd = load(LS_DD, null);
   const requests = load(LS_REQUESTS, []);
 
   refs.dotProfile.classList.toggle('show', !profile);
   refs.dotDd.classList.toggle('show', false);
+  refs.dotRequest.classList.toggle('show', !!(profile && requests.some((r) => r.riderPhone === profile.phone && r.status === 'pending')));
+
   const dashHasPending = !!(dd && dd.available && requests.some((r) => r.status === 'pending'));
   refs.dotDash.classList.toggle('show', dashHasPending);
 }
@@ -459,20 +461,20 @@ function buildSupervisorRows(existing = []) {
   refs.supRows.innerHTML = rows;
 }
 
-function loadRiderProfileIntoForm(){
+function loadRiderProfileIntoForm() {
   const profile = load(LS_PROFILE, null);
   buildSupervisorRows(profile ? profile.supervisors : []);
   refs.rPhone.value = profile ? profile.phone || '' : '';
 }
 
-function loadDDProfileIntoForm(){
+function loadDDProfileIntoForm() {
   const dd = load(LS_DD, null);
   refs.ddPhone.value = dd ? dd.phone || '' : '';
   refs.ddVehicle.value = dd ? dd.vehicle || '' : '';
   refs.ddAvailable.checked = !!(dd && dd.available);
 }
 
-function renderHomeChecklist(){
+function renderHomeChecklist() {
   const profile = load(LS_PROFILE, null);
   const dd = load(LS_DD, null);
   const requests = load(LS_REQUESTS, []);
@@ -513,20 +515,21 @@ function renderHomeChecklist(){
   updateNavDots();
 }
 
-function getRequestsForRider(profile){
+function getRequestsForRider(profile) {
   const requests = load(LS_REQUESTS, []);
   if (!profile) return [];
   return requests.filter((r) => r.riderPhone === profile.phone && r.status !== 'cancelled');
 }
 
-function currentOpenRequestForRider(){
+function currentOpenRequestForRider() {
   const profile = load(LS_PROFILE, null);
   if (!profile) return null;
   const requests = getRequestsForRider(profile);
-  return requests[0] || null;
+  if (requests.length === 0) return null;
+  return requests.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0];
 }
 
-function renderRequestView(){
+function renderRequestView() {
   const profile = load(LS_PROFILE, null);
   const req = currentOpenRequestForRider();
 
@@ -569,7 +572,7 @@ function renderRequestView(){
   refs.activeRequestWrap.innerHTML = html;
 }
 
-function renderEscalationCard(req){
+function renderEscalationCard(req) {
   const sups = req.supervisors || [];
   if (sups.length === 0) {
     return `<div class="card"><h2><span class="icon">📞</span> Last Resort: Supervisor Contact</h2><p class="muted">No supervisors were saved to your profile.</p></div>`;
@@ -598,7 +601,7 @@ function renderEscalationCard(req){
   return body;
 }
 
-function renderDashboard(){
+function renderDashboard() {
   const dd = load(LS_DD, null);
   refs.dashNoProfile.style.display = dd ? 'none' : 'block';
   if (!dd) {
@@ -654,27 +657,36 @@ function renderDashboard(){
   refs.dashContent.innerHTML = html;
 }
 
-function cancelRequest(id){
+function cancelRequest(id) {
   const requests = load(LS_REQUESTS, []);
   const r = requests.find((x) => x.id === id);
   if (r) r.status = 'cancelled';
   save(LS_REQUESTS, requests);
   toast('Request cancelled.');
   renderRequestView();
+  renderHomeChecklist();
   updateNavDots();
 }
 
-function notifyNext(id){
+function notifyNext(id) {
   const requests = load(LS_REQUESTS, []);
   const r = requests.find((x) => x.id === id);
   if (r) {
-    r.notifiedIndex = (r.notifiedIndex ?? -1) + 1;
+    const lastIndex = (r.supervisors?.length || 0) - 1;
+    if (lastIndex < 0) {
+      save(LS_REQUESTS, requests);
+      renderRequestView();
+      return;
+    }
+
+    const nextIndex = (r.notifiedIndex ?? -1) + 1;
+    r.notifiedIndex = Math.min(nextIndex, lastIndex);
     save(LS_REQUESTS, requests);
   }
   renderRequestView();
 }
 
-function acceptRequest(id){
+function acceptRequest(id) {
   const dd = load(LS_DD, null);
   if (!dd) {
     toast('Set up your DD profile first.', 'error');
@@ -683,31 +695,44 @@ function acceptRequest(id){
 
   const requests = load(LS_REQUESTS, []);
   const r = requests.find((x) => x.id === id);
-  if (r) {
-    r.status = 'accepted';
-    r.assignedDD = { phone: dd.phone, vehicle: dd.vehicle };
-    save(LS_REQUESTS, requests);
+  if (!r) {
+    renderDashboard();
+    return;
   }
+
+  if (r.status !== 'pending') {
+    toast('That request is no longer available.', 'error');
+    renderDashboard();
+    return;
+  }
+
+  r.status = 'accepted';
+  r.assignedDD = { phone: dd.phone, vehicle: dd.vehicle };
+  save(LS_REQUESTS, requests);
 
   toast('Request accepted. Drive safe!', 'success');
   renderDashboard();
   renderRequestView();
+  renderHomeChecklist();
   updateNavDots();
 }
 
-function declineRequest(id){
+function declineRequest(id) {
   const requests = load(LS_REQUESTS, []);
   const r = requests.find((x) => x.id === id);
   if (r) {
-    r.status = 'cancelled';
-    save(LS_REQUESTS, requests);
+    if (r.status === 'pending') {
+      r.status = 'cancelled';
+      save(LS_REQUESTS, requests);
+    }
   }
   toast('Request skipped.');
   renderDashboard();
+  renderHomeChecklist();
   updateNavDots();
 }
 
-function bindStaticEvents(){
+function bindStaticEvents() {
   refs.navButtons.forEach((btn) => {
     btn.addEventListener('click', () => goTo(btn.dataset.view));
   });
@@ -754,6 +779,7 @@ function bindStaticEvents(){
     toast('DD profile saved.', 'success');
     updateNavDots();
     renderDashboard();
+    renderHomeChecklist();
   });
 
   refs.ddAvailable.addEventListener('change', (e) => {
@@ -763,6 +789,7 @@ function bindStaticEvents(){
       save(LS_DD, dd);
       toast(e.target.checked ? "You're now visible as available." : 'You are now offline.');
       updateNavDots();
+      renderHomeChecklist();
     }
   });
 
@@ -803,6 +830,14 @@ function bindStaticEvents(){
       return;
     }
 
+    const requests = load(LS_REQUESTS, []);
+    const hasOpenRequest = requests.some((r) => r.riderPhone === profile.phone && r.status === 'pending');
+    if (hasOpenRequest) {
+      toast('You already have a pending ride request.', 'error');
+      renderRequestView();
+      return;
+    }
+
     const dropoff = refs.dropoff.value.trim();
     if (!state.pendingLocation) {
       toast('Please share your exact location first.', 'error');
@@ -815,7 +850,6 @@ function bindStaticEvents(){
     }
 
     setInvalid(refs.dropoff, null, false);
-    const requests = load(LS_REQUESTS, []);
     const req = {
       id: uid(),
       riderPhone: profile.phone,
@@ -836,6 +870,7 @@ function bindStaticEvents(){
     refs.locStatus.textContent = 'Location not yet shared.';
     toast('Ride requested. Looking for a driver...', 'success');
     renderRequestView();
+    renderHomeChecklist();
     updateNavDots();
   });
 
