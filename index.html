@@ -338,19 +338,57 @@
     .switch input:checked + .slider { background: var(--success); }
     .switch input:checked + .slider:before { transform: translateX(22px); }
 
-    .banner {
-      border: 1px solid var(--gold);
-      background: #241d0c;
-      color: var(--gold-light);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 12.5px;
-      margin-bottom: 14px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      line-height: 1.5;
-    }
+   .banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2b230d, #1b170c);
+  color: var(--gold-light);
+
+  font-size: 12.5px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+}
+
+.banner .icon {
+  flex: 0 0 auto;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.banner span:last-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.banner a.link {
+  color: var(--gold-light);
+  font-weight: 700;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.banner a.link:hover,
+.banner a.link:focus-visible {
+  color: #fff3b5;
+}
+
+@media (max-width: 360px) {
+  .banner {
+    padding: 11px 12px;
+    font-size: 12px;
+    gap: 8px;
+  }
+}
+
 
     .banner .icon { font-size: 16px; flex: 0 0 auto; }
     .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 26px 10px; }
@@ -498,7 +536,7 @@
         </div>
 
         <div class="banner"><span class="icon">ℹ️</span><span>This app runs on your device. Call and text buttons open your phone’s real dialer and messages app.</span></div>
-        <div class="banner"><span class="icon">🛠️</span><span>Having technical issues? Call <a class="link" href="tel:6606242732" style="color: var(--gold-light);">660-624-2732</a> for help.</span></div>
+        <div class="banner"><span class="icon">🛠️</span><span>Having technical issues? Call <a class="link" href="tel:6606242732">660-624-2732</a> for help.</span></div>
       </section>
 
       <section id="view-rider-profile" class="view">
@@ -1103,11 +1141,12 @@
         }
 
         const requests = load(LS_REQUESTS, []);
-        if (requests.some((request) => request.riderPhone === profile.phone && request.status === 'pending')) {
-          toast('You already have a pending ride request.', 'error');
-          renderRequestView();
-          return;
-        }
+        if (requests.some((req) =>
+  req.riderPhone === profile.phone && req.status === 'pending'
+)) {
+  toast('You already have a pending ride request.', 'error');
+  return;
+}
 
         const dropoff = refs.dropoff.value.trim();
         if (!state.pendingLocation) {
