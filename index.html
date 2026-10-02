@@ -259,12 +259,18 @@
         <div class="field-error" id="r-phone-err">Please enter a valid phone number.</div>
       </div>
 
-      <div class="card">
-        <h2><span class="icon">📞</span> Supervisor Notification Order</h2>
-        <p class="subtitle">Add up to 6 supervisors in the exact order you want them contacted if no driver is available. #1 is called first &mdash; fill in as many as you'd like.</p>
-        <div id="sup-rows"></div>
-        <button class="btn btn-primary" id="save-profile">Save Profile</button>
-      </div>
+    <div class="card">
+  <h2><span class="icon">📞</span> Supervisor Notification Order</h2>
+
+  <p class="subtitle">
+    Add up to 6 supervisors in the exact order you want them contacted if no
+    driver is available. 1 is called first — fill in as many as you'd like.
+  </p>
+
+  <div id="sup-rows"></div>
+
+  <button class="btn btn-primary" id="save-profile">Save Profile</button>
+</div>
     </section>
 
     <!-- DD PROFILE -->
@@ -442,10 +448,13 @@ function isValidPhone(v){ return /\d{7,}/.test(v.replace(/\D/g,'')); }
 function buildSupervisorRows(existing = []) {
   const wrap = document.getElementById("sup-rows");
   wrap.innerHTML = "";
+
   for (let i = 1; i <= 6; i++) {
     const sup = existing.find(s => s.order === i) || { phone: "" };
+
     const row = document.createElement("div");
     row.className = "sup-row";
+
     row.innerHTML = `
       <div class="badge-row">
         <span class="badge">${i}</span>
@@ -453,6 +462,7 @@ function buildSupervisorRows(existing = []) {
           ${i === 1 ? "Contacted first" : i === 6 ? "Last resort" : "Backup contact"}
         </span>
       </div>
+
       <label>Supervisor ${i} Phone Number</label>
       <input
         type="tel"
@@ -461,6 +471,7 @@ function buildSupervisorRows(existing = []) {
         value="${(sup.phone || "").replace(/"/g, "&quot;")}"
       >
     `;
+
     wrap.appendChild(row);
   }
 }
