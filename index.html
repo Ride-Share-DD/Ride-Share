@@ -49,41 +49,36 @@
       overflow: hidden;
       background: #000;
       border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      align-items: flex-end;
     }
 
-    .hero-wrapper {
-      position: relative;
-      height: 100%;
-    }
-
-    .hero svg {
+    .hero-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
-      display: block;
       object-fit: cover;
       filter: brightness(0.72) saturate(1.05);
     }
 
     .hero-overlay {
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: linear-gradient(180deg, rgba(6,15,34,0.15) 0%, rgba(6,15,34,0.55) 60%, rgba(6,15,34,0.96) 100%);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       padding: 12px 18px 14px;
+      z-index: 2;
     }
 
     .hero-top {
       display: flex;
-      justify-content: flex-end;
-      align-items: center;
-    }
-
-    .hero-title {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
       justify-content: flex-end;
     }
 
@@ -374,59 +369,54 @@
     .switch input:checked + .slider { background: var(--success); }
     .switch input:checked + .slider:before { transform: translateX(22px); }
 
-   .banner {
-   display: flex;
-   align-items: flex-start;
-   gap: 10px;
+    .banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      width: 100%;
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2b230d, #1b170c);
+      color: var(--gold-light);
+      font-size: 12.5px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+    }
 
-   width: 100%;
-   margin: 0 0 14px;
-   padding: 12px 14px;
+    .banner .icon {
+      flex: 0 0 auto;
+      font-size: 16px;
+      line-height: 1.5;
+    }
 
-   border: 1px solid var(--gold);
-   border-radius: 12px;
-   background: linear-gradient(135deg, #2b230d, #1b170c);
-   color: var(--gold-light);
+    .banner span:last-child {
+      min-width: 0;
+      flex: 1;
+    }
 
-   font-size: 12.5px;
-   line-height: 1.5;
-   overflow-wrap: anywhere;
-   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
- }
+    .banner a.link {
+      color: var(--gold-light);
+      font-weight: 700;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
 
- .banner .icon {
-   flex: 0 0 auto;
-   font-size: 16px;
-   line-height: 1.5;
- }
+    .banner a.link:hover,
+    .banner a.link:focus-visible {
+      color: #fff3b5;
+    }
 
- .banner span:last-child {
-   min-width: 0;
-   flex: 1;
- }
+    @media (max-width: 360px) {
+      .banner {
+        padding: 11px 12px;
+        font-size: 12px;
+        gap: 8px;
+      }
+    }
 
- .banner a.link {
-   color: var(--gold-light);
-   font-weight: 700;
-   text-decoration-thickness: 1px;
-   text-underline-offset: 2px;
- }
-
- .banner a.link:hover,
- .banner a.link:focus-visible {
-   color: #fff3b5;
- }
-
- @media (max-width: 360px) {
-   .banner {
-     padding: 11px 12px;
-     font-size: 12px;
-     gap: 8px;
-   }
- }
-
-
-    .banner .icon { font-size: 16px; flex: 0 0 auto; }
     .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 26px 10px; }
     .empty .icon { font-size: 30px; display: block; margin-bottom: 8px; opacity: .7; }
 
@@ -530,7 +520,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       z-index: 100;
       align-items: center;
       justify-content: center;
@@ -541,17 +531,18 @@
     }
 
     .settings-modal-content {
+      position: relative;
       background: var(--navy2);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 20px;
+      padding: 24px;
       max-width: 300px;
       width: 90%;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     }
 
     .settings-modal-content h2 {
-      margin: 0 0 16px;
+      margin: 0 0 20px;
       font-size: 18px;
       color: var(--gold-light);
       text-align: center;
@@ -560,29 +551,54 @@
     .settings-modal-content button {
       width: 100%;
       padding: 12px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       border: 1.5px solid var(--border);
       background: var(--card);
       color: var(--text);
       border-radius: 10px;
       cursor: pointer;
       font-size: 14px;
-      transition: border-color 0.2s;
+      font-weight: 600;
+      transition: all 0.2s;
     }
 
     .settings-modal-content button:hover {
       border-color: var(--gold);
+      background: var(--card2);
     }
 
     .settings-modal-content .close-btn {
-      background: transparent;
+      background: none;
       border: none;
       color: var(--muted);
-      font-size: 24px;
+      font-size: 28px;
       position: absolute;
-      top: 12px;
+      top: 8px;
       right: 12px;
       cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .settings-modal-content .close-btn:hover {
+      color: var(--gold-light);
+    }
+
+    .settings-modal-content .btn-danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: white;
+      margin-top: 10px;
+    }
+
+    .settings-modal-content .btn-danger:hover {
+      background: #c73b35;
+      border-color: #c73b35;
     }
   </style>
 </head>
@@ -591,27 +607,25 @@
 
   <div class="phone">
     <header class="hero">
-      <div class="hero-wrapper">
-        <svg viewBox="0 0 1600 800" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <linearGradient id="sky" x1="0%" x2="0%" y1="0%" y2="100%">
-              <stop offset="0%" stop-color="#1a4d7a"/>
-              <stop offset="100%" stop-color="#0d2a4a"/>
-            </linearGradient>
-          </defs>
-          <rect width="1600" height="800" fill="url(#sky)"/>
-          <circle cx="200" cy="150" r="80" fill="#fff9e6" opacity="0.9"/>
-          <path d="M100 400 Q400 200 700 400 T1500 400" stroke="#fff9e6" stroke-width="3" fill="none" opacity="0.3"/>
-          <path d="M80 520 Q350 350 760 520 T1500 530" stroke="#dfeaff" stroke-width="2" fill="none" opacity="0.2"/>
-        </svg>
-        <div class="hero-overlay">
-          <div class="hero-top">
-            <button class="gear-btn" id="settings-btn">⚙️</button>
-          </div>
-          <div class="hero-title">
-            <h1>Whiteman Ride-Share</h1>
-            <p>Safe Ride Network &middot; Airmen Against Drunk Driving</p>
-          </div>
+      <svg class="hero-svg" viewBox="0 0 1600 800" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="sky" x1="0%" x2="0%" y1="0%" y2="100%">
+            <stop offset="0%" stop-color="#1a4d7a"/>
+            <stop offset="100%" stop-color="#0d2a4a"/>
+          </linearGradient>
+        </defs>
+        <rect width="1600" height="800" fill="url(#sky)"/>
+        <circle cx="200" cy="150" r="80" fill="#fff9e6" opacity="0.9"/>
+        <path d="M100 400 Q400 200 700 400 T1500 400" stroke="#fff9e6" stroke-width="3" fill="none" opacity="0.3"/>
+        <path d="M80 520 Q350 350 760 520 T1500 530" stroke="#dfeaff" stroke-width="2" fill="none" opacity="0.2"/>
+      </svg>
+      <div class="hero-overlay">
+        <div class="hero-top">
+          <button class="gear-btn" id="settings-btn" type="button">⚙️</button>
+        </div>
+        <div>
+          <h1>Whiteman Ride-Share</h1>
+          <p>Safe Ride Network &middot; Airmen Against Drunk Driving</p>
         </div>
       </div>
     </header>
@@ -735,9 +749,11 @@
 
     <div id="settings-modal" class="settings-modal">
       <div class="settings-modal-content">
-        <button class="close-btn" id="close-settings">×</button>
+        <button class="close-btn" id="close-settings" type="button">×</button>
         <h2>Settings</h2>
-        <button id="reset-demo">Reset Demo Data</button>
+        <button id="delete-rider-profile" type="button">Delete Rider Profile</button>
+        <button id="delete-dd-profile" type="button">Delete DD Profile</button>
+        <button id="delete-all-data" class="btn-danger" type="button">Delete All Data</button>
       </div>
     </div>
   </div>
@@ -768,10 +784,12 @@
       locStatus: document.getElementById('loc-status'),
       dropoff: document.getElementById('dropoff'),
       submitRequest: document.getElementById('submit-request'),
-      resetDemo: document.getElementById('reset-demo'),
       settingsBtn: document.getElementById('settings-btn'),
       settingsModal: document.getElementById('settings-modal'),
       closeSettings: document.getElementById('close-settings'),
+      deleteRiderProfile: document.getElementById('delete-rider-profile'),
+      deleteDDProfile: document.getElementById('delete-dd-profile'),
+      deleteAllData: document.getElementById('delete-all-data'),
       navButtons: Array.from(document.querySelectorAll('.bottom-nav button')),
       viewPanels: Array.from(document.querySelectorAll('.view')),
       dotProfile: document.getElementById('dot-profile'),
@@ -979,7 +997,7 @@
       }
 
       const currentIndex = request.notifiedIndex ?? -1;
-      let card = `<div class="card"><h2><span class="icon">📞</span> Last Resort: Supervisor Contact</h2><p class="subtitle">If no driver accepts, your supervisors are contacted one at a time.<[...]
+      let card = `<div class="card"><h2><span class="icon">📞</span> Last Resort: Supervisor Contact</h2><p class="subtitle">If no driver accepts, your supervisors are contacted one at a time.</p>`;
 
       if (currentIndex === -1) {
         card += `<button class="btn btn-outline" data-notify-next="${request.id}">No DD available &mdash; Start supervisor chain</button>`;
@@ -993,7 +1011,7 @@
               <a class="btn btn-success btn-half" href="tel:${supervisor.phone}">📞 Call</a>
               <a class="btn btn-outline btn-half" href="sms:${supervisor.phone}">💬 Text</a>
             </div>
-            ${currentIndex + 1 < supervisors.length ? `<button class="btn btn-outline btn-small" data-notify-next="${request.id}">No answer &mdash; try next supervisor</button>` : `<p class="mute[...]
+            ${currentIndex + 1 < supervisors.length ? `<button class="btn btn-outline btn-small" data-notify-next="${request.id}">No answer &mdash; try next supervisor</button>` : `<p class="muted">This was your last supervisor.</p>`}
           </div>
         `;
       }
@@ -1158,11 +1176,29 @@
       }
     }
 
-    function resetDemo() {
+    function deleteRiderData() {
+      localStorage.removeItem(LS_PROFILE);
+      toast('Rider profile deleted.', 'success');
+      updateNavDots();
+      renderHomeChecklist();
+      loadRiderProfileIntoForm();
+      renderRequestView();
+    }
+
+    function deleteDDData() {
+      localStorage.removeItem(LS_DD);
+      toast('DD profile deleted.', 'success');
+      updateNavDots();
+      renderHomeChecklist();
+      loadDDProfileIntoForm();
+      renderDashboard();
+    }
+
+    function deleteAllData() {
       localStorage.removeItem(LS_PROFILE);
       localStorage.removeItem(LS_DD);
       localStorage.removeItem(LS_REQUESTS);
-      toast('Demo data cleared.', 'success');
+      toast('All data deleted.', 'success');
       updateNavDots();
       renderHomeChecklist();
       loadRiderProfileIntoForm();
@@ -1187,7 +1223,9 @@
       }
     });
 
-    refs.resetDemo.addEventListener('click', resetDemo);
+    refs.deleteRiderProfile.addEventListener('click', deleteRiderData);
+    refs.deleteDDProfile.addEventListener('click', deleteDDData);
+    refs.deleteAllData.addEventListener('click', deleteAllData);
     refs.saveProfile.addEventListener('click', saveProfile);
     refs.saveDDProfile.addEventListener('click', saveDDProfile);
 
