@@ -430,7 +430,7 @@
       display: flex;
       background: #0a1730;
       border-top: 1px solid var(--border);
-      padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+      padding: 0;
       z-index: 90;
       pointer-events: auto;
     }
@@ -440,30 +440,50 @@
       background: none;
       border: none;
       color: var(--muted);
-      font-size: 10.5px;
+      font-size: 11px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
-      padding: 8px 2px;
-      border-radius: 10px;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 0;
+      border-radius: 0;
       position: relative;
-      min-height: 52px;
+      min-height: 60px;
       touch-action: manipulation;
+      transition: all 0.2s ease;
+      font-weight: 500;
     }
 
-    nav.bottom-nav button .nav-icon { font-size: 19px; }
-    nav.bottom-nav button.active { color: var(--gold-light); }
+    nav.bottom-nav button:active {
+      background: rgba(212, 175, 55, 0.08);
+    }
+
+    nav.bottom-nav button .nav-icon { 
+      font-size: 22px;
+      display: block;
+    }
+
+    nav.bottom-nav button.active { 
+      color: var(--gold-light);
+      font-weight: 600;
+    }
+
+    nav.bottom-nav button.active .nav-icon {
+      font-size: 24px;
+    }
+
     nav.bottom-nav button .dot {
       position: absolute;
-      top: 4px;
-      right: 22%;
-      width: 7px;
-      height: 7px;
+      top: 6px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: var(--danger);
       display: none;
+      box-shadow: 0 0 4px rgba(224, 82, 77, 0.5);
     }
 
     nav.bottom-nav button .dot.show { display: block; }
@@ -743,10 +763,10 @@
     </footer>
 
     <nav class="bottom-nav">
-      <button data-view="home" class="active"><span class="nav-icon">🏠</span>Home</button>
-      <button data-view="rider-profile"><span class="nav-icon">👤</span>Profile<span class="dot" id="dot-profile"></span></button>
-      <button data-view="request"><span class="nav-icon">📍</span>Request<span class="dot" id="dot-request"></span></button>
-      <button data-view="dashboard"><span class="nav-icon">📋</span>Dashboard<span class="dot" id="dot-dash"></span></button>
+      <button data-view="home" class="active"><span class="nav-icon">🏠</span><span>Home</span></button>
+      <button data-view="rider-profile"><span class="nav-icon">👤</span><span>Profile</span><span class="dot" id="dot-profile"></span></button>
+      <button data-view="request"><span class="nav-icon">📍</span><span>Request</span><span class="dot" id="dot-request"></span></button>
+      <button data-view="dashboard"><span class="nav-icon">📋</span><span>Dashboard</span><span class="dot" id="dot-dash"></span></button>
     </nav>
 
     <div id="settings-modal" class="settings-modal">
@@ -998,49 +1018,283 @@
     function renderEscalationCard(request) {
       const supervisors = request.supervisors || [];
       if (supervisors.length === 0) {
-        return `<div class="card"><h2><span class="icon">📞</span> Last Resort</h2><p class="muted">No supervisors were saved to your profile.</p></div>`;
+        return '';
       }
 
-      const currentSupervisor = supervisors.find((sup) => sup.status === 'pending' || !sup.status) || supervisors[0];
-      const acceptedSupervisor = supervisors.find((sup) => sup.status === 'accepted');
+      let html = '<div class="card"><h2><span class="icon">⏱️</span> Supervisor Escalation Chain</h2>';
+      html += '<p class="subtitle">If no driver accepts, supervisors will be contacted in this order:</p>';
+      html += '<div style="display: flex; flex-direction: column; gap: 8px;">';
 
-      let html = `<div class="card"><h2><span class="icon">📞</span> Supervisor Escalation</h2>`;
+      supervisors.forEach((sup, idx) => {
+        const statusClass = sup.contacted ? 'pill-cancelled' : sup.skipped ? 'pill-off' : 'pill-pending';
+        const statusText = sup.contacted ? 'Contacted' : sup.skipped ? 'Skipped' : 'Awaiting';
+        html += `
+          <div class="request-item">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <strong>${idx + 1}. Supervisor</strong>
+              <span class="pill ${statusClass}">${statusText}</span>
+            </div>
+            <p class="muted" style="margin: 0;">
+              <a class="link" href="tel:${sup.phone}">${sup.phone}</a>
+            </p>
+          </div>
+        `;
+      });
 
-      if (acceptedSupervisor) {
-        html += `<p class="muted"><strong>${acceptedSupervisor.name || 'Supervisor'}</strong> is on the way. Phone: <a class="link" href="tel:${acceptedSupervisor.phone}">${acceptedSupervisor.phone}</a></p>`;
-      } else if (currentSupervisor) {
-        html += `<p class="muted">Contacting <strong>${currentSupervisor.name || 'Supervisor'}</strong> at <a class="link" href="tel:${currentSupervisor.phone}">${currentSupervisor.phone}</a>.</p>`;
-      }
-
-      html += `</div>`;
+      html += '</div></div>';
       return html;
     }
 
     function renderDashboard() {
-      refs.dashNoProfile.style.display = load(LS_DD, null) ? 'none' : 'block';
-      refs.dashContent.innerHTML = '';
-      updateNavDots();
-    }
+      const dd = load(LS_DD, null);
+      refs.dashNoProfile.style.display = !dd ? 'block' : 'none';
 
-    function loadSettingsHandlers() {
-      const settingsMenuButtons = document.querySelectorAll('[data-settings-go]');
-      settingsMenuButtons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          refs.settingsModal.classList.remove('active');
-          goTo(btn.dataset.settingsGo);
-        });
+      if (!dd) return;
+
+      const requests = load(LS_REQUESTS, []) || [];
+      const activeRequests = requests.filter((r) => r.status === 'pending');
+
+      if (activeRequests.length === 0) {
+        refs.dashContent.innerHTML = '<div class="empty"><span class="icon">🛌</span>No pending ride requests. Relax!</div>';
+        return;
+      }
+
+      let html = '';
+      activeRequests.forEach((req) => {
+        html += `
+          <div class="request-item">
+            <div style="margin-bottom: 8px;">
+              <span class="pill pill-pending">⏳ Pending</span>
+            </div>
+            <p class="muted" style="margin: 6px 0;">
+              <strong>Rider:</strong> <a class="link" href="tel:${req.riderPhone}">${req.riderPhone}</a>
+            </p>
+            <p class="muted" style="margin: 6px 0;">
+              <strong>Location:</strong> <a class="link" target="_blank" href="https://www.google.com/maps?q=${req.pickup.lat},${req.pickup.lng}">View on map</a>
+            </p>
+            <p class="muted" style="margin: 6px 0;">
+              <strong>Destination:</strong> ${req.dropoff}
+            </p>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+              <button class="btn btn-primary btn-small" data-accept-request="${req.id}">Accept</button>
+              <button class="btn btn-outline btn-small" data-decline-request="${req.id}">Decline</button>
+            </div>
+          </div>
+        `;
       });
+
+      refs.dashContent.innerHTML = html;
     }
 
-    refs.settingsBtn.addEventListener('click', () => refs.settingsModal.classList.add('active'));
-    refs.closeSettings.addEventListener('click', () => refs.settingsModal.classList.remove('active'));
-    refs.settingsModal.addEventListener('click', (e) => {
-      if (e.target === refs.settingsModal) refs.settingsModal.classList.remove('active');
+    refs.settingsBtn.addEventListener('click', () => {
+      refs.settingsModal.classList.add('active');
     });
 
-    loadSettingsHandlers();
+    refs.closeSettings.addEventListener('click', () => {
+      refs.settingsModal.classList.remove('active');
+    });
+
+    refs.settingsModal.addEventListener('click', (e) => {
+      if (e.target === refs.settingsModal) {
+        refs.settingsModal.classList.remove('active');
+      }
+    });
+
+    refs.navButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const viewName = button.dataset.view;
+        goTo(viewName);
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target.dataset.go) {
+        goTo(e.target.dataset.go);
+      }
+      if (e.target.dataset.settingsGo) {
+        refs.settingsModal.classList.remove('active');
+        goTo(e.target.dataset.settingsGo);
+      }
+    });
+
+    refs.saveProfile.addEventListener('click', () => {
+      const phone = refs.rPhone.value.trim();
+      const isValid = isValidPhone(phone);
+
+      setInvalid(refs.rPhone, refs.rPhoneErr, !isValid);
+      if (!isValid) return;
+
+      const supervisors = Array.from(refs.supRows.querySelectorAll('input[data-sup-phone]')).map((inp) => ({
+        order: parseInt(inp.dataset.supPhone),
+        phone: inp.value.trim()
+      })).filter((s) => s.phone);
+
+      const profile = { phone, supervisors };
+      save(LS_PROFILE, profile);
+      toast('Profile saved!', 'success');
+      renderHomeChecklist();
+    });
+
+    refs.saveDDProfile.addEventListener('click', () => {
+      const phone = refs.ddPhone.value.trim();
+      const isValid = isValidPhone(phone);
+
+      setInvalid(refs.ddPhone, refs.ddPhoneErr, !isValid);
+      if (!isValid) return;
+
+      const vehicle = refs.ddVehicle.value.trim();
+      const available = refs.ddAvailable.checked;
+
+      const ddProfile = { phone, vehicle, available };
+      save(LS_DD, ddProfile);
+      toast('DD Profile saved!', 'success');
+      renderHomeChecklist();
+    });
+
+    refs.getLocation.addEventListener('click', async () => {
+      if (!navigator.geolocation) {
+        toast('Geolocation not supported', 'error');
+        return;
+      }
+
+      refs.getLocation.disabled = true;
+      refs.getLocation.textContent = 'Getting location...';
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          state.pendingLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          refs.locStatus.textContent = `✅ Location ready: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+          refs.getLocation.disabled = false;
+          refs.getLocation.textContent = 'Share My Exact Location';
+          refs.getLocation.style.borderColor = 'var(--success)';
+          refs.getLocation.style.color = 'var(--success)';
+        },
+        (err) => {
+          toast('Could not get location: ' + err.message, 'error');
+          refs.getLocation.disabled = false;
+          refs.getLocation.textContent = 'Share My Exact Location';
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    });
+
+    refs.submitRequest.addEventListener('click', () => {
+      const profile = load(LS_PROFILE, null);
+      if (!profile) {
+        toast('No profile found', 'error');
+        return;
+      }
+
+      if (!state.pendingLocation) {
+        toast('Please share your location first', 'error');
+        return;
+      }
+
+      const dropoff = refs.dropoff.value.trim();
+      if (!dropoff) {
+        toast('Please enter a destination', 'error');
+        return;
+      }
+
+      const request = {
+        id: uid(),
+        riderPhone: profile.phone,
+        pickup: state.pendingLocation,
+        dropoff,
+        supervisors: (profile.supervisors || []).map((s) => ({ phone: s.phone, order: s.order, contacted: false, skipped: false })),
+        status: 'pending',
+        createdAt: Date.now()
+      };
+
+      const requests = load(LS_REQUESTS, []);
+      requests.push(request);
+      save(LS_REQUESTS, requests);
+
+      state.pendingLocation = null;
+      refs.dropoff.value = '';
+      refs.locStatus.textContent = 'Location not yet shared.';
+      refs.getLocation.style.borderColor = '';
+      refs.getLocation.style.color = '';
+
+      toast('Ride requested! Waiting for a driver...', 'success');
+      renderRequestView();
+      renderHomeChecklist();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target.dataset.cancelRequest) {
+        const requests = load(LS_REQUESTS, []);
+        const idx = requests.findIndex((r) => r.id === e.target.dataset.cancelRequest);
+        if (idx >= 0) {
+          requests[idx].status = 'cancelled';
+          save(LS_REQUESTS, requests);
+          toast('Request cancelled', 'success');
+          renderRequestView();
+          renderHomeChecklist();
+        }
+      }
+
+      if (e.target.dataset.acceptRequest) {
+        const dd = load(LS_DD, null);
+        if (!dd) {
+          toast('No DD profile found', 'error');
+          return;
+        }
+
+        const requests = load(LS_REQUESTS, []);
+        const idx = requests.findIndex((r) => r.id === e.target.dataset.acceptRequest);
+        if (idx >= 0) {
+          requests[idx].status = 'accepted';
+          requests[idx].assignedDD = { phone: dd.phone, vehicle: dd.vehicle };
+          save(LS_REQUESTS, requests);
+          toast('Ride accepted! Contact rider.', 'success');
+          renderDashboard();
+          renderHomeChecklist();
+        }
+      }
+
+      if (e.target.dataset.declineRequest) {
+        const requests = load(LS_REQUESTS, []);
+        const idx = requests.findIndex((r) => r.id === e.target.dataset.declineRequest);
+        if (idx >= 0) {
+          requests.splice(idx, 1);
+          save(LS_REQUESTS, requests);
+          toast('Request declined', 'success');
+          renderDashboard();
+        }
+      }
+    });
+
+    refs.deleteRiderProfile.addEventListener('click', () => {
+      if (confirm('Delete your rider profile?')) {
+        localStorage.removeItem(LS_PROFILE);
+        toast('Rider profile deleted', 'success');
+        refs.settingsModal.classList.remove('active');
+        renderHomeChecklist();
+      }
+    });
+
+    refs.deleteDDProfile.addEventListener('click', () => {
+      if (confirm('Delete your DD profile?')) {
+        localStorage.removeItem(LS_DD);
+        toast('DD profile deleted', 'success');
+        refs.settingsModal.classList.remove('active');
+        renderHomeChecklist();
+      }
+    });
+
+    refs.deleteAllData.addEventListener('click', () => {
+      if (confirm('Delete ALL data? This cannot be undone.')) {
+        localStorage.removeItem(LS_PROFILE);
+        localStorage.removeItem(LS_DD);
+        localStorage.removeItem(LS_REQUESTS);
+        toast('All data deleted', 'success');
+        refs.settingsModal.classList.remove('active');
+        goTo('home');
+      }
+    });
+
     renderHomeChecklist();
-    renderDashboard();
   </script>
 </body>
 </html>
