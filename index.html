@@ -432,7 +432,6 @@ display: flex;
 background: #0a1730;
 border-top: 1px solid var(--border);
 padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
-      z-index: 20;
       z-index: 90;
       pointer-events: auto;
 }
@@ -890,6 +889,10 @@ if (viewName === 'dd-profile') loadDDProfileIntoForm();
 if (viewName === 'request') renderRequestView();
 if (viewName === 'dashboard') renderDashboard();
 }
+
+refs.navButtons.forEach((button) => {
+button.addEventListener('click', () => goTo(button.dataset.view));
+});
 
 function updateNavDots() {
 const profile = load(LS_PROFILE, null);
