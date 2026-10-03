@@ -849,6 +849,8 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       if (viewName === 'home') renderHomeChecklist();
+      if (viewName === 'rider-profile') loadRiderProfileIntoForm();
+      if (viewName === 'dd-profile') loadDDProfileIntoForm();
       if (viewName === 'request') renderRequestView();
       if (viewName === 'dashboard') renderDashboard();
     }
@@ -997,301 +999,131 @@
       }
 
       const currentIndex = request.notifiedIndex ?? -1;
-      let card = `<div class="card"><h2><span class="icon">📞</span> Last Resort: Supervisor Contact</h2><p class="subtitle">If no driver accepts, your supervisors are contacted one at a time.</p>`;
-
-      if (currentIndex === -1) {
-        card += `<button class="btn btn-outline" data-notify-next="${request.id}">No DD available &mdash; Start supervisor chain</button>`;
-      } else if (currentIndex < supervisors.length) {
-        const supervisor = supervisors[currentIndex];
-        card += `
-          <div class="sup-row">
-            <div class="badge-row"><span class="badge">${supervisor.order}</span><span class="badge-label">Currently contacting</span></div>
-            <h3>Supervisor ${supervisor.order}</h3>
-            <div class="btn-row">
-              <a class="btn btn-success btn-half" href="tel:${supervisor.phone}">📞 Call</a>
-              <a class="btn btn-outline btn-half" href="sms:${supervisor.phone}">💬 Text</a>
-            </div>
-            ${currentIndex + 1 < supervisors.length ? `<button class="btn btn-outline btn-small" data-notify-next="${request.id}">No answer &mdash; try next supervisor</button>` : `<p class="muted">This was your last supervisor.</p>`}
-          </div>
-        `;
-      }
-
-      card += `</div>`;
+      let card = `<div class="card"><h2><span class="icon">📞</span> Last Resort: Supervisor Contact</h2><p class="subtitle">If no driver accepts, your supervisors will be contacted in order:</p>`;
+      
+      card += '<div style="margin-top:12px;">';
+      supervisors.forEach((sup, i) => {
+        const status = i < currentIndex ? 'notified' : i === currentIndex ? 'current' : 'pending';
+        const statusText = status === 'notified' ? '✅ Contacted' : status === 'current' ? '📞 Contacting now' : '⏳ Will contact';
+        card += `<p class="muted" style="margin:0 0 8px;">• ${sup.phone} - <strong>${statusText}</strong></p>`;
+      });
+      card += '</div></div>';
+      
       return card;
     }
 
     function renderDashboard() {
       const dd = load(LS_DD, null);
       refs.dashNoProfile.style.display = dd ? 'none' : 'block';
-      if (!dd) {
-        refs.dashContent.innerHTML = '';
-        return;
-      }
+
+      if (!dd) return;
 
       const requests = load(LS_REQUESTS, []);
-      const pending = requests.filter((r) => r.status === 'pending');
-      const mine = requests.filter((r) => r.status === 'accepted' && r.assignedDD && r.assignedDD.phone === dd.phone);
+      const pendingRequests = requests.filter((r) => r.status === 'pending');
 
-      let html = `
-        <div class="card">
-          <div class="toggle-wrap" style="margin-top:0;">
-            <span class="toggle-label">${dd.available ? '🟢 You are Available' : '⚪ You are Offline'}</span>
-            <span class="pill ${dd.available ? 'pill-accepted' : 'pill-off'}">${dd.available ? 'Visible to riders' : 'Hidden'}</span>
-          </div>
-          <p class="muted" style="margin-top:8px;">Change your availability from the DD Profile tab.</p>
-        </div>
-      `;
-
-      html += `<div class="card"><h2><span class="icon">📋</span> Pending Ride Requests</h2>`;
-
-      if (!dd.available) {
-        html += `<div class="empty"><span class="icon">💤</span>Set yourself available in your DD Profile to see requests.</div>`;
-      } else if (pending.length === 0) {
-        html += `<div class="empty"><span class="icon">✅</span>No pending requests right now.</div>`;
+      let html = '';
+      if (pendingRequests.length === 0) {
+        html = '<div class="card"><div class="empty"><span class="icon">🚗</span>No pending ride requests</div></div>';
       } else {
-        pending.forEach((request) => {
+        pendingRequests.forEach((req) => {
           html += `
             <div class="request-item">
-              <p><strong>Rider</strong> <span class="muted">&middot; ${new Date(request.createdAt).toLocaleTimeString()}</span></p>
-              <p class="muted">Pickup: <a class="link" target="_blank" href="https://www.google.com/maps?q=${request.pickup.lat},${request.pickup.lng}">exact location</a></p>
-              <p class="muted">Drop-off: ${request.dropoff}</p>
-              <div class="btn-row">
-                <button class="btn btn-success btn-half" data-action="accept-request" data-id="${request.id}">✅ Accept</button>
-                <button class="btn btn-danger btn-half" data-action="decline-request" data-id="${request.id}">Decline</button>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <strong>${req.riderPhone}</strong>
+                <span class="pill pill-pending">Pending</span>
               </div>
+              <p class="muted" style="margin:0 0 8px;">📍 <a class="link" target="_blank" href="https://www.google.com/maps?q=${req.pickup.lat},${req.pickup.lng}">View location</a></p>
+              <p class="muted" style="margin:0 0 10px;">🏁 ${req.dropoff}</p>
+              <button class="btn btn-primary btn-small" data-accept-request="${req.id}">Accept Ride</button>
             </div>
           `;
         });
-      }
-
-      html += `</div>`;
-
-      if (mine.length > 0) {
-        html += `<div class="card"><h2><span class="icon">🚙</span> Your Accepted Pickups</h2>`;
-        mine.forEach((request) => {
-          html += `
-            <div class="request-item">
-              <p><strong>Rider Phone</strong> &middot; <a class="link" href="tel:${request.riderPhone}">${request.riderPhone}</a></p>
-              <p class="muted">Pickup: <a class="link" target="_blank" href="https://www.google.com/maps?q=${request.pickup.lat},${request.pickup.lng}">exact location</a></p>
-              <p class="muted">Drop-off: ${request.dropoff}</p>
-            </div>
-          `;
-        });
-        html += `</div>`;
       }
 
       refs.dashContent.innerHTML = html;
     }
 
-    function saveProfile() {
-      const phone = refs.rPhone.value.trim();
-      const invalid = !isValidPhone(phone);
-      setInvalid(refs.rPhone, refs.rPhoneErr, invalid);
-      if (invalid) {
-        toast('Please fix the highlighted phone number.', 'error');
-        return;
-      }
+    // Event listeners
+    refs.navButtons.forEach((button) => {
+      button.addEventListener('click', () => goTo(button.dataset.view));
+    });
 
-      const supervisors = [];
-      for (let index = 1; index <= 6; index++) {
-        const input = document.querySelector('[data-sup-phone="' + index + '"]');
-        const value = input ? input.value.trim() : '';
-        if (value) supervisors.push({ order: index, phone: value });
-      }
+    document.addEventListener('click', (e) => {
+      if (e.target.dataset.go) goTo(e.target.dataset.go);
+    });
+
+    refs.saveProfile.addEventListener('click', () => {
+      const phone = refs.rPhone.value.trim();
+      const isValid = isValidPhone(phone);
+      setInvalid(refs.rPhone, refs.rPhoneErr, !isValid);
+
+      if (!isValid) return;
+
+      const supervisors = Array.from(document.querySelectorAll('[data-sup-phone]'))
+        .map((inp) => ({ order: parseInt(inp.dataset.supPhone), phone: inp.value.trim() }))
+        .filter((s) => s.phone);
 
       save(LS_PROFILE, { phone, supervisors });
-      toast('Profile saved.', 'success');
-      updateNavDots();
+      toast('Profile saved!', 'success');
       renderHomeChecklist();
-      renderRequestView();
-    }
+    });
 
-    function saveDDProfile() {
+    refs.saveDDProfile.addEventListener('click', () => {
       const phone = refs.ddPhone.value.trim();
-      const invalid = !isValidPhone(phone);
-      setInvalid(refs.ddPhone, refs.ddPhoneErr, invalid);
-      if (invalid) {
-        toast('Please fix the highlighted phone number.', 'error');
-        return;
-      }
+      const isValid = isValidPhone(phone);
+      setInvalid(refs.ddPhone, refs.ddPhoneErr, !isValid);
+
+      if (!isValid) return;
 
       save(LS_DD, {
         phone,
         vehicle: refs.ddVehicle.value.trim(),
         available: refs.ddAvailable.checked
       });
-
-      toast('DD profile saved.', 'success');
-      updateNavDots();
-      renderDashboard();
+      toast('DD Profile saved!', 'success');
       renderHomeChecklist();
-    }
-
-    function cancelRequest(id) {
-      const requests = load(LS_REQUESTS, []);
-      const index = requests.findIndex((item) => item.id === id);
-      if (index >= 0) {
-        requests[index].status = 'cancelled';
-        save(LS_REQUESTS, requests);
-        toast('Request cancelled.', 'success');
-        updateNavDots();
-        renderRequestView();
-        renderDashboard();
-      }
-    }
-
-    function notifyNextSupervisor(id) {
-      const requests = load(LS_REQUESTS, []);
-      const req = requests.find((item) => item.id === id);
-      if (req) {
-        req.notifiedIndex = (req.notifiedIndex ?? -1) + 1;
-        save(LS_REQUESTS, requests);
-        renderRequestView();
-      }
-    }
-
-    function acceptRequest(id) {
-      const dd = load(LS_DD, null);
-      const requests = load(LS_REQUESTS, []);
-      const req = requests.find((item) => item.id === id);
-      if (req && dd) {
-        req.status = 'accepted';
-        req.assignedDD = { phone: dd.phone, vehicle: dd.vehicle };
-        save(LS_REQUESTS, requests);
-        toast('Request accepted!', 'success');
-        updateNavDots();
-        renderDashboard();
-      }
-    }
-
-    function declineRequest(id) {
-      const requests = load(LS_REQUESTS, []);
-      const index = requests.findIndex((item) => item.id === id);
-      if (index >= 0) {
-        requests.splice(index, 1);
-        save(LS_REQUESTS, requests);
-        toast('Request declined.', 'success');
-        updateNavDots();
-        renderDashboard();
-      }
-    }
-
-    function deleteRiderData() {
-      localStorage.removeItem(LS_PROFILE);
-      toast('Rider profile deleted.', 'success');
-      updateNavDots();
-      renderHomeChecklist();
-      loadRiderProfileIntoForm();
-      renderRequestView();
-    }
-
-    function deleteDDData() {
-      localStorage.removeItem(LS_DD);
-      toast('DD profile deleted.', 'success');
-      updateNavDots();
-      renderHomeChecklist();
-      loadDDProfileIntoForm();
-      renderDashboard();
-    }
-
-    function deleteAllData() {
-      localStorage.removeItem(LS_PROFILE);
-      localStorage.removeItem(LS_DD);
-      localStorage.removeItem(LS_REQUESTS);
-      toast('All data deleted.', 'success');
-      updateNavDots();
-      renderHomeChecklist();
-      loadRiderProfileIntoForm();
-      loadDDProfileIntoForm();
-      renderRequestView();
-      renderDashboard();
-      goTo('home');
-      refs.settingsModal.classList.remove('active');
-    }
-
-    refs.settingsBtn.addEventListener('click', () => {
-      refs.settingsModal.classList.add('active');
-    });
-
-    refs.closeSettings.addEventListener('click', () => {
-      refs.settingsModal.classList.remove('active');
-    });
-
-    refs.settingsModal.addEventListener('click', (e) => {
-      if (e.target === refs.settingsModal) {
-        refs.settingsModal.classList.remove('active');
-      }
-    });
-
-    refs.deleteRiderProfile.addEventListener('click', deleteRiderData);
-    refs.deleteDDProfile.addEventListener('click', deleteDDData);
-    refs.deleteAllData.addEventListener('click', deleteAllData);
-    refs.saveProfile.addEventListener('click', saveProfile);
-    refs.saveDDProfile.addEventListener('click', saveDDProfile);
-
-    refs.navButtons.forEach((button) => {
-      button.addEventListener('click', (e) => {
-        goTo(button.dataset.view);
-      });
-    });
-
-    document.addEventListener('click', (e) => {
-      if (e.target.dataset.go) goTo(e.target.dataset.go);
-      if (e.target.dataset.cancelRequest) cancelRequest(e.target.dataset.cancelRequest);
-      if (e.target.dataset.notifyNext) notifyNextSupervisor(e.target.dataset.notifyNext);
-      if (e.target.dataset.action === 'accept-request') acceptRequest(e.target.dataset.id);
-      if (e.target.dataset.action === 'decline-request') declineRequest(e.target.dataset.id);
     });
 
     refs.getLocation.addEventListener('click', () => {
-      state.geoToken++;
-      const currentToken = state.geoToken;
-      refs.getLocation.textContent = '📍 Getting location...';
-      refs.getLocation.disabled = true;
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            if (currentToken === state.geoToken) {
-              state.pendingLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-              };
-              refs.locStatus.textContent = '✅ Location shared: ' + Math.round(state.pendingLocation.lat * 10000) / 10000 + ', ' + Math.round(state.pendingLocation.lng * 10000) / 10000;
-              refs.getLocation.textContent = '✅ Location shared';
-              refs.getLocation.disabled = false;
-            }
-          },
-          (error) => {
-            if (currentToken === state.geoToken) {
-              toast('Unable to get location. Check browser permissions.', 'error');
-              refs.getLocation.textContent = '📍 Share My Exact Location';
-              refs.getLocation.disabled = false;
-            }
-          }
-        );
-      } else {
-        toast('Geolocation not supported by this browser.', 'error');
-        refs.getLocation.textContent = '📍 Share My Exact Location';
-        refs.getLocation.disabled = false;
+      if (!navigator.geolocation) {
+        toast('Geolocation not available', 'error');
+        return;
       }
+
+      refs.getLocation.disabled = true;
+      refs.getLocation.textContent = 'Getting location...';
+      state.geoToken++;
+      const token = state.geoToken;
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (token !== state.geoToken) return;
+          state.pendingLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          refs.locStatus.textContent = `✅ Location shared (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
+          refs.getLocation.disabled = false;
+          refs.getLocation.textContent = 'Share My Exact Location';
+        },
+        () => {
+          if (token !== state.geoToken) return;
+          refs.getLocation.disabled = false;
+          refs.getLocation.textContent = 'Share My Exact Location';
+          toast('Unable to get location', 'error');
+        }
+      );
     });
 
     refs.submitRequest.addEventListener('click', () => {
-      const dropoff = refs.dropoff.value.trim();
-      if (!dropoff) {
-        toast('Please enter a destination.', 'error');
-        return;
-      }
+      const profile = load(LS_PROFILE, null);
+      if (!profile) return;
 
       if (!state.pendingLocation) {
-        toast('Please share your location first.', 'error');
+        toast('Please share your location', 'error');
         return;
       }
 
-      const profile = load(LS_PROFILE, null);
-      if (!profile) {
-        toast('Please save your profile first.', 'error');
+      const dropoff = refs.dropoff.value.trim();
+      if (!dropoff) {
+        toast('Please enter drop-off destination', 'error');
         return;
       }
 
@@ -1303,25 +1135,82 @@
         dropoff,
         supervisors: profile.supervisors || [],
         status: 'pending',
+        notifiedIndex: -1,
         createdAt: Date.now()
       };
 
       requests.push(newRequest);
       save(LS_REQUESTS, requests);
-      toast('Ride request submitted!', 'success');
 
       state.pendingLocation = null;
-      refs.dropoff.value = '';
-      refs.getLocation.textContent = '📍 Share My Exact Location';
       refs.locStatus.textContent = 'Location not yet shared.';
+      refs.dropoff.value = '';
 
-      updateNavDots();
+      toast('Ride request sent!', 'success');
       renderRequestView();
-      renderDashboard();
+      renderHomeChecklist();
     });
 
-    loadRiderProfileIntoForm();
-    loadDDProfileIntoForm();
+    document.addEventListener('click', (e) => {
+      if (e.target.dataset.cancelRequest) {
+        const requests = load(LS_REQUESTS, []);
+        const idx = requests.findIndex((r) => r.id === e.target.dataset.cancelRequest);
+        if (idx !== -1) {
+          requests[idx].status = 'cancelled';
+          save(LS_REQUESTS, requests);
+          toast('Request cancelled', 'success');
+          renderRequestView();
+          renderHomeChecklist();
+        }
+      }
+
+      if (e.target.dataset.acceptRequest) {
+        const dd = load(LS_DD, null);
+        const requests = load(LS_REQUESTS, []);
+        const idx = requests.findIndex((r) => r.id === e.target.dataset.acceptRequest);
+        if (idx !== -1 && dd) {
+          requests[idx].status = 'accepted';
+          requests[idx].assignedDD = { phone: dd.phone, vehicle: dd.vehicle };
+          save(LS_REQUESTS, requests);
+          toast('Ride accepted!', 'success');
+          renderDashboard();
+          renderHomeChecklist();
+        }
+      }
+    });
+
+    refs.settingsBtn.addEventListener('click', () => {
+      refs.settingsModal.classList.add('active');
+    });
+
+    refs.closeSettings.addEventListener('click', () => {
+      refs.settingsModal.classList.remove('active');
+    });
+
+    refs.deleteRiderProfile.addEventListener('click', () => {
+      localStorage.removeItem(LS_PROFILE);
+      toast('Rider profile deleted', 'success');
+      refs.settingsModal.classList.remove('active');
+      renderHomeChecklist();
+    });
+
+    refs.deleteDDProfile.addEventListener('click', () => {
+      localStorage.removeItem(LS_DD);
+      toast('DD profile deleted', 'success');
+      refs.settingsModal.classList.remove('active');
+      renderHomeChecklist();
+    });
+
+    refs.deleteAllData.addEventListener('click', () => {
+      if (confirm('Delete all data? This cannot be undone.')) {
+        localStorage.clear();
+        toast('All data deleted', 'success');
+        refs.settingsModal.classList.remove('active');
+        location.reload();
+      }
+    });
+
+    // Initial render
     renderHomeChecklist();
   </script>
 </body>
