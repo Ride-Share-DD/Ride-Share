@@ -603,9 +603,121 @@
       background: #c73b35;
       border-color: #c73b35;
     }
+
+    .settings-modal-content button .dot {
+      display: none;
+      width: 7px;
+      height: 7px;
+      margin-left: 6px;
+      border-radius: 50%;
+      background: var(--danger);
+      vertical-align: middle;
+    }
+
+    .settings-modal-content button .dot.show {
+      display: inline-block;
+    }
+
+    .phone {
+      visibility: hidden;
+    }
+
+    body.access-granted .phone {
+      visibility: visible;
+    }
+
+    .access-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(180deg, var(--navy), #060f22 60%);
+    }
+
+    #access-gate[hidden] {
+      display: none;
+    }
+
+    .access-gate-content {
+      width: 100%;
+      max-width: 360px;
+      padding: 24px;
+      border: 1px solid var(--gold);
+      border-radius: 16px;
+      background: var(--navy2);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+    }
+
+    .access-gate-content h1 {
+      margin: 0 0 8px;
+      color: var(--gold-light);
+      font-size: 22px;
+    }
+
+    .access-gate-content p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .access-gate-content label {
+      display: block;
+      margin: 16px 0 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .access-gate-content input {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #0e1a36;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .access-gate-content button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(180deg, var(--gold-light), var(--gold-dark));
+      color: #1a1305;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .access-gate-error {
+      margin-bottom: 0;
+      color: var(--danger) !important;
+    }
+
+    .access-gate-error[hidden] {
+      display: none;
+    }
   </style>
 </head>
 <body>
+  <div class="access-gate" id="access-gate">
+    <div class="access-gate-content">
+      <h1 id="access-title">Whiteman Ride-Share</h1>
+      <p>Enter the access code to continue.</p>
+      <form id="access-form">
+        <label for="access-code">Access code</label>
+        <input id="access-code" type="password" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
+        <button type="submit">Unlock</button>
+        <p class="access-gate-error" id="access-error" role="alert" aria-live="polite" hidden>Incorrect code</p>
+      </form>
+    </div>
+  </div>
+
   <div id="toast-wrap"></div>
 
   <div class="phone">
@@ -762,6 +874,64 @@
   </div>
 
   <script>
+    // Generate a replacement hash with: echo -n "newcode" | sha256sum
+    const ACCESS_CODE_HASH = 'a268e47c2aabfd8c9e6eac615564d426d33f08bcd7fd2789315517676987a97f';
+    const ACCESS_STORAGE_KEY = 'whiteman_access_ok';
+    const accessGate = document.getElementById('access-gate');
+    const accessForm = document.getElementById('access-form');
+    const accessCode = document.getElementById('access-code');
+    const accessError = document.getElementById('access-error');
+    const accessSubmit = accessForm.querySelector('button[type="submit"]');
+
+    function grantAccess() {
+      document.body.classList.add('access-granted');
+      accessGate.hidden = true;
+    }
+
+    async function hashAccessCode(value) {
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+      return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    try {
+      if (localStorage.getItem(ACCESS_STORAGE_KEY) === ACCESS_CODE_HASH) grantAccess();
+    } catch (error) {}
+
+    accessForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      accessSubmit.disabled = true;
+      accessError.hidden = true;
+
+      try {
+        if (await hashAccessCode(accessCode.value) === ACCESS_CODE_HASH) {
+          try {
+            localStorage.setItem(ACCESS_STORAGE_KEY, ACCESS_CODE_HASH);
+          } catch (error) {}
+          grantAccess();
+        } else {
+          accessError.textContent = 'Incorrect code';
+          accessError.hidden = false;
+          accessCode.focus();
+        }
+      } catch (error) {
+        accessError.textContent = 'Unable to verify code. Please try again.';
+        accessError.hidden = false;
+      } finally {
+        accessSubmit.disabled = false;
+      }
+    });
+
+    accessCode.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        accessForm.requestSubmit();
+      }
+    });
+
+    accessCode.addEventListener('input', () => {
+      accessError.hidden = true;
+    });
+
     const LS_PROFILE = 'whiteman_profile';
     const LS_DD = 'whiteman_dd_profile';
     const LS_REQUESTS = 'whiteman_requests';
@@ -864,7 +1034,7 @@
       const requests = load(LS_REQUESTS, []);
 
       refs.dotProfile.classList.toggle('show', !profile);
-      refs.dotDd.classList.toggle('show', false);
+      refs.dotDd.classList.toggle('show', !dd);
 
       const pendingReqs = requests.filter((r) => r.status === 'pending');
       refs.dotRequest.classList.toggle('show', !!(profile && pendingReqs.some((r) => r.riderPhone === profile.phone)));
@@ -1001,25 +1171,50 @@
         return `<div class="card"><h2><span class="icon">📞</span> Last Resort</h2><p class="muted">No supervisors were saved to your profile.</p></div>`;
       }
 
-      const currentSupervisor = supervisors.find((sup) => sup.status === 'pending' || !sup.status) || supervisors[0];
-      const acceptedSupervisor = supervisors.find((sup) => sup.status === 'accepted');
+      const currentIndex = request.notifiedIndex ?? -1;
+      let card = `<div class="card"><h2><span class="icon">📞</span> Last Resort: Supervisor Contact</h2><p class="subtitle">If no driver accepts, your supervisors will be contacted in order:</p>`;
 
-      let html = `<div class="card"><h2><span class="icon">📞</span> Supervisor Escalation</h2>`;
+      card += '<div style="margin-top:12px;">';
+      supervisors.forEach((sup, i) => {
+        const status = i < currentIndex ? 'notified' : i === currentIndex ? 'current' : 'pending';
+        const statusText = status === 'notified' ? '✅ Contacted' : status === 'current' ? '📞 Contacting now' : '⏳ Will contact';
+        card += `<p class="muted" style="margin:0 0 8px;">• ${sup.phone} - <strong>${statusText}</strong></p>`;
+      });
+      card += '</div></div>';
 
-      if (acceptedSupervisor) {
-        html += `<p class="muted"><strong>${acceptedSupervisor.name || 'Supervisor'}</strong> is on the way. Phone: <a class="link" href="tel:${acceptedSupervisor.phone}">${acceptedSupervisor.phone}</a></p>`;
-      } else if (currentSupervisor) {
-        html += `<p class="muted">Contacting <strong>${currentSupervisor.name || 'Supervisor'}</strong> at <a class="link" href="tel:${currentSupervisor.phone}">${currentSupervisor.phone}</a>.</p>`;
-      }
-
-      html += `</div>`;
-      return html;
+      return card;
     }
 
     function renderDashboard() {
-      refs.dashNoProfile.style.display = load(LS_DD, null) ? 'none' : 'block';
+      const dd = load(LS_DD, null);
+      refs.dashNoProfile.style.display = dd ? 'none' : 'block';
       refs.dashContent.innerHTML = '';
-      updateNavDots();
+
+      if (!dd) return;
+
+      const requests = load(LS_REQUESTS, []);
+      const pendingRequests = requests.filter((r) => r.status === 'pending');
+
+      let html = '';
+      if (pendingRequests.length === 0) {
+        html = '<div class="card"><div class="empty"><span class="icon">🚗</span>No pending ride requests</div></div>';
+      } else {
+        pendingRequests.forEach((req) => {
+          html += `
+            <div class="request-item">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <strong>${req.riderPhone}</strong>
+                <span class="pill pill-pending">Pending</span>
+              </div>
+              <p class="muted" style="margin:0 0 8px;">📍 <a class="link" target="_blank" href="https://www.google.com/maps?q=${req.pickup.lat},${req.pickup.lng}">View location</a></p>
+              <p class="muted" style="margin:0 0 10px;">🏁 ${req.dropoff}</p>
+              <button class="btn btn-primary btn-small" data-accept-request="${req.id}">Accept Ride</button>
+            </div>
+          `;
+        });
+      }
+
+      refs.dashContent.innerHTML = html;
     }
 
     function loadSettingsHandlers() {
@@ -1039,6 +1234,166 @@
     });
 
     loadSettingsHandlers();
+
+    refs.navButtons.forEach((button) => {
+      button.addEventListener('click', () => goTo(button.dataset.view));
+    });
+
+    document.addEventListener('click', (e) => {
+      const target = e.target.closest('[data-go]');
+      if (target) goTo(target.dataset.go);
+    });
+
+    refs.saveProfile.addEventListener('click', () => {
+      const phone = refs.rPhone.value.trim();
+      const isValid = isValidPhone(phone);
+      setInvalid(refs.rPhone, refs.rPhoneErr, !isValid);
+
+      if (!isValid) return;
+
+      const supervisors = Array.from(document.querySelectorAll('[data-sup-phone]'))
+        .map((inp) => ({ order: parseInt(inp.dataset.supPhone), phone: inp.value.trim() }))
+        .filter((s) => s.phone);
+
+      save(LS_PROFILE, { phone, supervisors });
+      toast('Profile saved!', 'success');
+      renderHomeChecklist();
+    });
+
+    refs.saveDDProfile.addEventListener('click', () => {
+      const phone = refs.ddPhone.value.trim();
+      const isValid = isValidPhone(phone);
+      setInvalid(refs.ddPhone, refs.ddPhoneErr, !isValid);
+
+      if (!isValid) return;
+
+      save(LS_DD, {
+        phone,
+        vehicle: refs.ddVehicle.value.trim(),
+        available: refs.ddAvailable.checked
+      });
+      toast('DD Profile saved!', 'success');
+      renderHomeChecklist();
+    });
+
+    refs.getLocation.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        toast('Geolocation not available', 'error');
+        return;
+      }
+
+      refs.getLocation.disabled = true;
+      refs.getLocation.textContent = 'Getting location...';
+      state.geoToken++;
+      const token = state.geoToken;
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (token !== state.geoToken) return;
+          state.pendingLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          refs.locStatus.textContent = `✅ Location shared (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
+          refs.getLocation.disabled = false;
+          refs.getLocation.textContent = 'Share My Exact Location';
+        },
+        () => {
+          if (token !== state.geoToken) return;
+          refs.getLocation.disabled = false;
+          refs.getLocation.textContent = 'Share My Exact Location';
+          toast('Unable to get location', 'error');
+        }
+      );
+    });
+
+    refs.submitRequest.addEventListener('click', () => {
+      const profile = load(LS_PROFILE, null);
+      if (!profile) return;
+
+      if (!state.pendingLocation) {
+        toast('Please share your location', 'error');
+        return;
+      }
+
+      const dropoff = refs.dropoff.value.trim();
+      if (!dropoff) {
+        toast('Please enter drop-off destination', 'error');
+        return;
+      }
+
+      const requests = load(LS_REQUESTS, []);
+      const newRequest = {
+        id: uid(),
+        riderPhone: profile.phone,
+        pickup: state.pendingLocation,
+        dropoff,
+        supervisors: profile.supervisors || [],
+        status: 'pending',
+        notifiedIndex: -1,
+        createdAt: Date.now()
+      };
+
+      requests.push(newRequest);
+      save(LS_REQUESTS, requests);
+
+      state.pendingLocation = null;
+      refs.locStatus.textContent = 'Location not yet shared.';
+      refs.dropoff.value = '';
+
+      toast('Ride request sent!', 'success');
+      renderRequestView();
+      renderHomeChecklist();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target.dataset.cancelRequest) {
+        const requests = load(LS_REQUESTS, []);
+        const idx = requests.findIndex((r) => r.id === e.target.dataset.cancelRequest);
+        if (idx !== -1) {
+          requests[idx].status = 'cancelled';
+          save(LS_REQUESTS, requests);
+          toast('Request cancelled', 'success');
+          renderRequestView();
+          renderHomeChecklist();
+        }
+      }
+
+      if (e.target.dataset.acceptRequest) {
+        const dd = load(LS_DD, null);
+        const requests = load(LS_REQUESTS, []);
+        const idx = requests.findIndex((r) => r.id === e.target.dataset.acceptRequest);
+        if (idx !== -1 && dd) {
+          requests[idx].status = 'accepted';
+          requests[idx].assignedDD = { phone: dd.phone, vehicle: dd.vehicle };
+          save(LS_REQUESTS, requests);
+          toast('Ride accepted!', 'success');
+          renderDashboard();
+          renderHomeChecklist();
+        }
+      }
+    });
+
+    refs.deleteRiderProfile.addEventListener('click', () => {
+      localStorage.removeItem(LS_PROFILE);
+      toast('Rider profile deleted', 'success');
+      refs.settingsModal.classList.remove('active');
+      renderHomeChecklist();
+    });
+
+    refs.deleteDDProfile.addEventListener('click', () => {
+      localStorage.removeItem(LS_DD);
+      toast('DD profile deleted', 'success');
+      refs.settingsModal.classList.remove('active');
+      renderHomeChecklist();
+    });
+
+    refs.deleteAllData.addEventListener('click', () => {
+      if (confirm('Delete all data? This cannot be undone.')) {
+        localStorage.clear();
+        toast('All data deleted', 'success');
+        refs.settingsModal.classList.remove('active');
+        location.reload();
+      }
+    });
+
     renderHomeChecklist();
     renderDashboard();
   </script>
