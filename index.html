@@ -1029,6 +1029,10 @@
       });
     }
 
+    refs.navButtons.forEach((button) => {
+      button.addEventListener('click', () => goTo(button.dataset.view));
+    });
+
     refs.settingsBtn.addEventListener('click', () => refs.settingsModal.classList.add('active'));
     refs.closeSettings.addEventListener('click', () => refs.settingsModal.classList.remove('active'));
     refs.settingsModal.addEventListener('click', (e) => {
