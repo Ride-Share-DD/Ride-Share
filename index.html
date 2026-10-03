@@ -623,9 +623,63 @@
       background: #c73b35;
       border-color: #c73b35;
     }
+
+    .access-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: var(--navy, #0d2a4a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .access-gate.hidden { display: none; }
+    .access-gate-box {
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      color: #fff;
+    }
+    .access-gate-box h1 { font-size: 22px; margin-bottom: 8px; }
+    .access-gate-box p { font-size: 14px; opacity: 0.8; margin-bottom: 16px; }
+    .access-gate-box input {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 3px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .access-gate-box button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 10px;
+      border: none;
+      background: var(--gold, #d4a82b);
+      color: #0d2a4a;
+      cursor: pointer;
+    }
+    .access-gate-box button:disabled { opacity: 0.6; cursor: wait; }
+    .access-gate-err { color: #ff6b66; font-size: 14px; min-height: 20px; margin-bottom: 8px; }
   </style>
 </head>
 <body>
+  <div id="access-gate" class="access-gate hidden">
+    <form class="access-gate-box" id="access-form" autocomplete="off">
+      <h1>🔐 Access Required</h1>
+      <p>Enter your access code to continue.</p>
+      <input id="access-code" type="password" maxlength="20" placeholder="Access code" aria-label="Access code" autocapitalize="characters">
+      <div class="access-gate-err" id="access-err" role="alert"></div>
+      <button type="submit" id="access-submit">Enter</button>
+    </form>
+  </div>
   <div id="toast-wrap"></div>
 
   <div class="phone">
@@ -776,6 +830,7 @@
         <button type="button" data-settings-go="dd-profile">🚗 DD Profile <span class="dot" id="dot-dd"></span></button>
         <button id="delete-rider-profile" type="button">Delete Rider Profile</button>
         <button id="delete-dd-profile" type="button">Delete DD Profile</button>
+        <button id="logout-btn" type="button">🔓 Logout</button>
         <button id="delete-all-data" class="btn-danger" type="button">Delete All Data</button>
       </div>
     </div>
@@ -1293,6 +1348,52 @@
         goTo('home');
       }
     });
+
+    const LS_ACCESS = 'whiteman_access';
+    // Client-side only access control. Add/change codes here (label identifies who/what the code is for).
+    const ACCESS_CODES = { 'WHITEMAN': 'default' };
+
+    (function initAccessGate() {
+      const gate = document.getElementById('access-gate');
+      const form = document.getElementById('access-form');
+      const input = document.getElementById('access-code');
+      const err = document.getElementById('access-err');
+      const submit = document.getElementById('access-submit');
+
+      const hasAccess = () => {
+        try {
+          const saved = JSON.parse(localStorage.getItem(LS_ACCESS));
+          return !!saved && Object.prototype.hasOwnProperty.call(ACCESS_CODES, saved.code);
+        } catch (e) { return false; }
+      };
+      const show = () => { gate.classList.remove('hidden'); input.value = ''; err.textContent = ''; input.focus(); };
+      if (!hasAccess()) { localStorage.removeItem(LS_ACCESS); show(); }
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const code = input.value.trim().toUpperCase();
+        err.textContent = '';
+        submit.disabled = true;
+        submit.textContent = 'Checking...';
+        setTimeout(() => {
+          if (Object.prototype.hasOwnProperty.call(ACCESS_CODES, code)) {
+            localStorage.setItem(LS_ACCESS, JSON.stringify({ code, label: ACCESS_CODES[code], at: new Date().toISOString() }));
+            gate.classList.add('hidden');
+          } else {
+            err.textContent = 'Invalid access code. Please try again.';
+            input.select();
+          }
+          submit.disabled = false;
+          submit.textContent = 'Enter';
+        }, 500);
+      });
+
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem(LS_ACCESS);
+        document.getElementById('settings-modal').classList.remove('active');
+        show();
+      });
+    })();
 
     renderHomeChecklist();
   </script>
