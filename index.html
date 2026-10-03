@@ -742,7 +742,6 @@
     <nav class="bottom-nav">
       <button data-view="home" class="active"><span class="nav-icon">🏠</span>Home</button>
       <button data-view="rider-profile"><span class="nav-icon">👤</span>Profile<span class="dot" id="dot-profile"></span></button>
-      <button data-view="dd-profile"><span class="nav-icon">🚗</span>DD Setup<span class="dot" id="dot-dd"></span></button>
       <button data-view="request"><span class="nav-icon">📍</span>Request<span class="dot" id="dot-request"></span></button>
       <button data-view="dashboard"><span class="nav-icon">📋</span>Dashboard<span class="dot" id="dot-dash"></span></button>
     </nav>
@@ -751,6 +750,7 @@
       <div class="settings-modal-content">
         <button class="close-btn" id="close-settings" type="button">×</button>
         <h2>Settings</h2>
+        <button type="button" data-settings-go="dd-profile">🚗 DD Profile <span class="dot" id="dot-dd"></span></button>
         <button id="delete-rider-profile" type="button">Delete Rider Profile</button>
         <button id="delete-dd-profile" type="button">Delete DD Profile</button>
         <button id="delete-all-data" class="btn-danger" type="button">Delete All Data</button>
@@ -998,220 +998,46 @@
         return `<div class="card"><h2><span class="icon">📞</span> Last Resort</h2><p class="muted">No supervisors were saved to your profile.</p></div>`;
       }
 
-      const currentIndex = request.notifiedIndex ?? -1;
-      let card = `<div class="card"><h2><span class="icon">📞</span> Last Resort: Supervisor Contact</h2><p class="subtitle">If no driver accepts, your supervisors will be contacted in order:</p>`;
-      
-      card += '<div style="margin-top:12px;">';
-      supervisors.forEach((sup, i) => {
-        const status = i < currentIndex ? 'notified' : i === currentIndex ? 'current' : 'pending';
-        const statusText = status === 'notified' ? '✅ Contacted' : status === 'current' ? '📞 Contacting now' : '⏳ Will contact';
-        card += `<p class="muted" style="margin:0 0 8px;">• ${sup.phone} - <strong>${statusText}</strong></p>`;
-      });
-      card += '</div></div>';
-      
-      return card;
+      const currentSupervisor = supervisors.find((sup) => sup.status === 'pending' || !sup.status) || supervisors[0];
+      const acceptedSupervisor = supervisors.find((sup) => sup.status === 'accepted');
+
+      let html = `<div class="card"><h2><span class="icon">📞</span> Supervisor Escalation</h2>`;
+
+      if (acceptedSupervisor) {
+        html += `<p class="muted"><strong>${acceptedSupervisor.name || 'Supervisor'}</strong> is on the way. Phone: <a class="link" href="tel:${acceptedSupervisor.phone}">${acceptedSupervisor.phone}</a></p>`;
+      } else if (currentSupervisor) {
+        html += `<p class="muted">Contacting <strong>${currentSupervisor.name || 'Supervisor'}</strong> at <a class="link" href="tel:${currentSupervisor.phone}">${currentSupervisor.phone}</a>.</p>`;
+      }
+
+      html += `</div>`;
+      return html;
     }
 
     function renderDashboard() {
-      const dd = load(LS_DD, null);
-      refs.dashNoProfile.style.display = dd ? 'none' : 'block';
-
-      if (!dd) return;
-
-      const requests = load(LS_REQUESTS, []);
-      const pendingRequests = requests.filter((r) => r.status === 'pending');
-
-      let html = '';
-      if (pendingRequests.length === 0) {
-        html = '<div class="card"><div class="empty"><span class="icon">🚗</span>No pending ride requests</div></div>';
-      } else {
-        pendingRequests.forEach((req) => {
-          html += `
-            <div class="request-item">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <strong>${req.riderPhone}</strong>
-                <span class="pill pill-pending">Pending</span>
-              </div>
-              <p class="muted" style="margin:0 0 8px;">📍 <a class="link" target="_blank" href="https://www.google.com/maps?q=${req.pickup.lat},${req.pickup.lng}">View location</a></p>
-              <p class="muted" style="margin:0 0 10px;">🏁 ${req.dropoff}</p>
-              <button class="btn btn-primary btn-small" data-accept-request="${req.id}">Accept Ride</button>
-            </div>
-          `;
-        });
-      }
-
-      refs.dashContent.innerHTML = html;
+      refs.dashNoProfile.style.display = load(LS_DD, null) ? 'none' : 'block';
+      refs.dashContent.innerHTML = '';
+      updateNavDots();
     }
 
-    // Event listeners
-    refs.navButtons.forEach((button) => {
-      button.addEventListener('click', () => goTo(button.dataset.view));
-    });
-
-    document.addEventListener('click', (e) => {
-      if (e.target.dataset.go) goTo(e.target.dataset.go);
-    });
-
-    refs.saveProfile.addEventListener('click', () => {
-      const phone = refs.rPhone.value.trim();
-      const isValid = isValidPhone(phone);
-      setInvalid(refs.rPhone, refs.rPhoneErr, !isValid);
-
-      if (!isValid) return;
-
-      const supervisors = Array.from(document.querySelectorAll('[data-sup-phone]'))
-        .map((inp) => ({ order: parseInt(inp.dataset.supPhone), phone: inp.value.trim() }))
-        .filter((s) => s.phone);
-
-      save(LS_PROFILE, { phone, supervisors });
-      toast('Profile saved!', 'success');
-      renderHomeChecklist();
-    });
-
-    refs.saveDDProfile.addEventListener('click', () => {
-      const phone = refs.ddPhone.value.trim();
-      const isValid = isValidPhone(phone);
-      setInvalid(refs.ddPhone, refs.ddPhoneErr, !isValid);
-
-      if (!isValid) return;
-
-      save(LS_DD, {
-        phone,
-        vehicle: refs.ddVehicle.value.trim(),
-        available: refs.ddAvailable.checked
+    function loadSettingsHandlers() {
+      const settingsMenuButtons = document.querySelectorAll('[data-settings-go]');
+      settingsMenuButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          refs.settingsModal.classList.remove('active');
+          goTo(btn.dataset.settingsGo);
+        });
       });
-      toast('DD Profile saved!', 'success');
-      renderHomeChecklist();
+    }
+
+    refs.settingsBtn.addEventListener('click', () => refs.settingsModal.classList.add('active'));
+    refs.closeSettings.addEventListener('click', () => refs.settingsModal.classList.remove('active'));
+    refs.settingsModal.addEventListener('click', (e) => {
+      if (e.target === refs.settingsModal) refs.settingsModal.classList.remove('active');
     });
 
-    refs.getLocation.addEventListener('click', () => {
-      if (!navigator.geolocation) {
-        toast('Geolocation not available', 'error');
-        return;
-      }
-
-      refs.getLocation.disabled = true;
-      refs.getLocation.textContent = 'Getting location...';
-      state.geoToken++;
-      const token = state.geoToken;
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          if (token !== state.geoToken) return;
-          state.pendingLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          refs.locStatus.textContent = `✅ Location shared (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
-          refs.getLocation.disabled = false;
-          refs.getLocation.textContent = 'Share My Exact Location';
-        },
-        () => {
-          if (token !== state.geoToken) return;
-          refs.getLocation.disabled = false;
-          refs.getLocation.textContent = 'Share My Exact Location';
-          toast('Unable to get location', 'error');
-        }
-      );
-    });
-
-    refs.submitRequest.addEventListener('click', () => {
-      const profile = load(LS_PROFILE, null);
-      if (!profile) return;
-
-      if (!state.pendingLocation) {
-        toast('Please share your location', 'error');
-        return;
-      }
-
-      const dropoff = refs.dropoff.value.trim();
-      if (!dropoff) {
-        toast('Please enter drop-off destination', 'error');
-        return;
-      }
-
-      const requests = load(LS_REQUESTS, []);
-      const newRequest = {
-        id: uid(),
-        riderPhone: profile.phone,
-        pickup: state.pendingLocation,
-        dropoff,
-        supervisors: profile.supervisors || [],
-        status: 'pending',
-        notifiedIndex: -1,
-        createdAt: Date.now()
-      };
-
-      requests.push(newRequest);
-      save(LS_REQUESTS, requests);
-
-      state.pendingLocation = null;
-      refs.locStatus.textContent = 'Location not yet shared.';
-      refs.dropoff.value = '';
-
-      toast('Ride request sent!', 'success');
-      renderRequestView();
-      renderHomeChecklist();
-    });
-
-    document.addEventListener('click', (e) => {
-      if (e.target.dataset.cancelRequest) {
-        const requests = load(LS_REQUESTS, []);
-        const idx = requests.findIndex((r) => r.id === e.target.dataset.cancelRequest);
-        if (idx !== -1) {
-          requests[idx].status = 'cancelled';
-          save(LS_REQUESTS, requests);
-          toast('Request cancelled', 'success');
-          renderRequestView();
-          renderHomeChecklist();
-        }
-      }
-
-      if (e.target.dataset.acceptRequest) {
-        const dd = load(LS_DD, null);
-        const requests = load(LS_REQUESTS, []);
-        const idx = requests.findIndex((r) => r.id === e.target.dataset.acceptRequest);
-        if (idx !== -1 && dd) {
-          requests[idx].status = 'accepted';
-          requests[idx].assignedDD = { phone: dd.phone, vehicle: dd.vehicle };
-          save(LS_REQUESTS, requests);
-          toast('Ride accepted!', 'success');
-          renderDashboard();
-          renderHomeChecklist();
-        }
-      }
-    });
-
-    refs.settingsBtn.addEventListener('click', () => {
-      refs.settingsModal.classList.add('active');
-    });
-
-    refs.closeSettings.addEventListener('click', () => {
-      refs.settingsModal.classList.remove('active');
-    });
-
-    refs.deleteRiderProfile.addEventListener('click', () => {
-      localStorage.removeItem(LS_PROFILE);
-      toast('Rider profile deleted', 'success');
-      refs.settingsModal.classList.remove('active');
-      renderHomeChecklist();
-    });
-
-    refs.deleteDDProfile.addEventListener('click', () => {
-      localStorage.removeItem(LS_DD);
-      toast('DD profile deleted', 'success');
-      refs.settingsModal.classList.remove('active');
-      renderHomeChecklist();
-    });
-
-    refs.deleteAllData.addEventListener('click', () => {
-      if (confirm('Delete all data? This cannot be undone.')) {
-        localStorage.clear();
-        toast('All data deleted', 'success');
-        refs.settingsModal.classList.remove('active');
-        location.reload();
-      }
-    });
-
-    // Initial render
+    loadSettingsHandlers();
     renderHomeChecklist();
+    renderDashboard();
   </script>
 </body>
 </html>
