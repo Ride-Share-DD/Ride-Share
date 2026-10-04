@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Whiteman Ride-Share</title>
-<meta name="description" content="Whiteman Ride-Share - Safe Ride Network. Request a ride, share your exact location, and reach a Designated Driver or your supervisor chain as a last resort." />
+<meta name="description" content="Whiteman Ride-Share - Safe Ride Network. Request a ride, share your exact location, and reach a Designated Driver or your supervisors or wingmen as a last resort." />
 <style>
 :root {
 --navy: #0b1d3a;
@@ -728,28 +728,28 @@ border-color: #c73b35;
 <h2><span class="icon">🛡️</span> How it works</h2>
 <p class="subtitle">Three ways this keeps you safe:</p>
 <ol class="muted" style="padding-left:18px; margin:0;">
-<li style="margin-bottom:6px;">Request a ride and share your exact location.</li>
+<li style="margin-bottom:6px;">Request a ride and share your exact location. Sharing with a supervisor or wingman opens your own messaging app, so the text comes from your number.</li>
 <li style="margin-bottom:6px;">A nearby Designated Driver accepts and comes to get you.</li>
-<li>If no driver is available, your saved supervisors are contacted one at a time in the order you set.</li>
+<li>If no driver is available, your saved supervisors or wingmen are contacted one at a time in the order you set.</li>
 </ol>
 </div>
 
-<div class="banner"><span class="icon">ℹ️</span><span>This app runs on your device. Call and text buttons open your phone's real dialer and messages app.</span></div>
+<div class="banner"><span class="icon">ℹ️</span><span>This app runs on your device. Call and text buttons, including sharing your exact location with a supervisor or wingman, open your phone's own dialer and messaging app.</span></div>
 <div class="banner"><span class="icon">🛠️</span><span>Having technical issues? Call <a class="link" href="tel:6606242732">660-624-2732</a> for help.</span></div>
 </section>
 
 <section id="view-rider-profile" class="view">
 <div class="card">
 <h2><span class="icon">👤</span> My Profile</h2>
-<p class="subtitle">Save your phone number and supervisor notification order.</p>
+<p class="subtitle">Save your phone number and supervisor or wingman notification order.</p>
 <label>Your Phone Number</label>
 <input type="tel" id="r-phone" placeholder="(555) 555-5555" />
 <div class="field-error" id="r-phone-err">Please enter a valid phone number.</div>
 </div>
 
 <div class="card">
-<h2><span class="icon">📞</span> Supervisor Notification Order</h2>
-<p class="subtitle">Add up to 6 supervisors in the order you want them contacted if no driver is available.</p>
+<h2><span class="icon">📞</span> Supervisor or Wingman Notification Order</h2>
+<p class="subtitle">Add up to 6 supervisors or wingmen in the order you want them contacted if no driver is available.</p>
 <div id="sup-rows"></div>
 <button class="btn btn-primary" id="save-profile">Save Profile</button>
 </div>
@@ -791,6 +791,8 @@ Save your profile first before requesting a ride.
 <button class="btn btn-outline" id="get-location">Share My Exact Location</button>
 <p class="muted" id="loc-status" style="margin-top:10px;">Location not yet shared.</p>
 </div>
+
+<div id="share-sup-wrap"></div>
 
 <div class="card">
 <h2><span class="icon">🏁</span> Drop-off Destination</h2>
@@ -849,6 +851,7 @@ homeChecklist: document.getElementById('home-checklist'),
 reqNoProfile: document.getElementById('req-no-profile'),
 reqFormWrap: document.getElementById('req-form-wrap'),
 activeRequestWrap: document.getElementById('active-request-wrap'),
+shareSupWrap: document.getElementById('share-sup-wrap'),
 dashNoProfile: document.getElementById('dash-no-profile'),
 dashContent: document.getElementById('dash-content'),
 rPhone: document.getElementById('r-phone'),
@@ -969,14 +972,16 @@ refs.dotDash.classList.toggle('show', !!(dd && dd.available && pendingReqs.lengt
 function buildSupervisorRows(existing = []) {
 const rows = Array.from({ length: 6 }, (_, index) => {
 const order = index + 1;
-const sup = existing.find((item) => item.order === order) || { phone: '' };
+const sup = existing.find((item) => item.order === order) || { phone: '', name: '' };
 return `
          <div class="sup-row">
            <div class="badge-row">
              <span class="badge">${order}</span>
              <span class="badge-label">${order === 1 ? 'Contacted first' : order === 6 ? 'Last resort' : 'Backup contact'}</span>
            </div>
-           <label>Supervisor ${order} Phone Number</label>
+           <label>Supervisor or Wingman ${order} Name/Label (optional)</label>
+           <input type="text" data-sup-name="${order}" placeholder="e.g. SSgt Smith" value="${escapeHTML(sup.name || '')}" />
+           <label>Supervisor or Wingman ${order} Phone Number</label>
            <input type="tel" data-sup-phone="${order}" placeholder="555-555-5555" value="${escapeHTML(sup.phone)}" />
          </div>
        `;
@@ -1009,7 +1014,7 @@ const steps = [
 {
 done: !!profile,
 title: 'Set up My Profile',
-sub: profile ? 'Saved — ' + (profile.supervisors?.length || 0) + ' supervisor(s) on file' : 'Add your phone number and supervisor order',
+sub: profile ? 'Saved — ' + (profile.supervisors?.length || 0) + ' supervisor(s)/wingman on file' : 'Add your phone number and supervisor or wingman order',
 view: 'rider-profile'
 },
 {
@@ -1056,6 +1061,7 @@ const request = currentOpenRequestForRider();
 refs.reqNoProfile.style.display = profile ? 'none' : 'block';
 refs.reqFormWrap.style.display = profile && (!request || request.status === 'cancelled') ? 'block' : 'none';
 refs.locStatus.textContent = state.pendingLocation ? 'Location shared.' : 'Location not yet shared.';
+refs.shareSupWrap.innerHTML = profile ? renderShareSupervisorCard() : '';
 
 if (!request) {
 refs.activeRequestWrap.innerHTML = '';
@@ -1091,25 +1097,144 @@ html += `</div>`;
 if (request.status === 'pending') {
 html += renderEscalationCard(request);
 }
+html += renderShareSupervisorCard();
 
 refs.activeRequestWrap.innerHTML = html;
 }
 
+function supervisorDigits(phone) {
+const raw = String(phone || '').trim();
+return (raw.startsWith('+') ? '+' : '') + raw.replace(/\D/g, '');
+}
+
+function renderShareSupervisorCard() {
+const profile = load(LS_PROFILE, null);
+const list = (profile && Array.isArray(profile.supervisors) ? profile.supervisors : [])
+.filter((sup) => sup && isValidPhone(sup.phone))
+.sort((a, b) => a.order - b.order);
+let html = `<div class="card"><h2><span class="icon">💬</span> Share Location With a Supervisor or Wingman</h2>
+<p class="subtitle">Opens your own messaging app so the text is sent from your number.</p>`;
+if (list.length === 0) {
+return html + `<p class="muted">No supervisor or wingman phone numbers saved yet.</p><button class="btn btn-outline" data-go="rider-profile">Go to My Profile</button></div>`;
+}
+list.forEach((sup) => {
+const n = escapeHTML(sup.order);
+const phone = escapeHTML(sup.phone);
+const label = sup.name
+? `Share Exact Location to ${escapeHTML(sup.name)} (Supervisor or Wingman ${n}) ${phone}`
+: `Share Exact Location to Supervisor or Wingman ${n} (${phone})`;
+html += `<div style="margin-bottom:14px;">
+<button class="btn btn-primary" data-share-sup="${n}">${label}</button>
+<button class="btn btn-outline" data-copy-sup="${n}">Copy message</button>
+${typeof navigator.share === 'function' ? `<button class="btn btn-outline" data-native-share="${n}">Share…</button>` : ''}
+<a class="btn btn-outline" href="tel:${escapeHTML(supervisorDigits(sup.phone))}">Call Supervisor or Wingman ${n}</a>
+</div>`;
+});
+return html + `</div>`;
+}
+
+function getFreshLocation(onSuccess) {
+const pending = state.pendingLocation;
+if (pending && pending.at && Date.now() - pending.at < 60000) {
+onSuccess(pending);
+return;
+}
+if (!navigator.geolocation) {
+toast('Location is not supported on this device. Location sharing also requires HTTPS.', 'error');
+return;
+}
+toast('Getting your exact location…');
+navigator.geolocation.getCurrentPosition((position) => {
+const { latitude, longitude, accuracy } = position.coords;
+if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+toast('Could not read your location. Please try again.', 'error');
+return;
+}
+state.pendingLocation = { lat: latitude, lng: longitude, accuracy, at: Date.now() };
+refs.locStatus.textContent = 'Location shared.';
+onSuccess(state.pendingLocation);
+}, (error) => {
+const message = error.code === 1
+? 'Location permission was denied. Allow location access (HTTPS is required) and try again.'
+: error.code === 2
+? 'Your location could not be determined. Please try again.'
+: error.code === 3
+? 'Location request timed out. Please try again.'
+: 'Could not get your location. Please try again.';
+toast(message, 'error');
+}, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+}
+
+function buildLocationMessage(loc) {
+const profile = load(LS_PROFILE, null);
+const acc = Number.isFinite(loc.accuracy) ? ` (accuracy ±${Math.round(loc.accuracy)} m)` : '';
+let message = `AADD: I need help/a ride. My exact location: https://maps.google.com/?q=${loc.lat},${loc.lng}${acc}. Sent ${new Date().toLocaleString()}.`;
+if (profile && profile.phone) message += ` My phone: ${profile.phone}.`;
+return message;
+}
+
+function findSupervisor(order) {
+const profile = load(LS_PROFILE, null);
+const list = profile && Array.isArray(profile.supervisors) ? profile.supervisors : [];
+return list.find((sup) => String(sup.order) === String(order) && isValidPhone(sup.phone));
+}
+
+function copyText(text) {
+const fallback = () => {
+const area = document.createElement('textarea');
+area.value = text;
+area.style.position = 'fixed';
+area.style.opacity = '0';
+document.body.appendChild(area);
+area.select();
+let ok = false;
+try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+area.remove();
+toast(ok ? 'Message copied.' : 'Could not copy the message.', ok ? 'success' : 'error');
+};
+if (navigator.clipboard && navigator.clipboard.writeText) {
+navigator.clipboard.writeText(text).then(() => toast('Message copied.', 'success'), fallback);
+} else {
+fallback();
+}
+}
+
+document.addEventListener('click', (event) => {
+const target = event.target.closest('[data-share-sup], [data-copy-sup], [data-native-share]');
+if (!target) return;
+const order = target.dataset.shareSup || target.dataset.copySup || target.dataset.nativeShare;
+const sup = findSupervisor(order);
+if (!sup) {
+toast('Supervisor or wingman phone number not found. Check your profile.', 'error');
+return;
+}
+getFreshLocation((loc) => {
+const message = buildLocationMessage(loc);
+if (target.dataset.shareSup) {
+window.location.href = `sms:${supervisorDigits(sup.phone)}?&body=${encodeURIComponent(message)}`;
+} else if (target.dataset.copySup) {
+copyText(message);
+} else if (typeof navigator.share === 'function') {
+navigator.share({ text: message }).catch(() => {});
+}
+});
+});
+
 function renderEscalationCard(request) {
 const supervisors = Array.isArray(request.supervisors) ? request.supervisors : [];
 if (supervisors.length === 0) {
-return `<div class="card"><h2><span class="icon">📞</span> Last Resort</h2><p class="muted">No supervisors were saved to your profile.</p></div>`;
+return `<div class="card"><h2><span class="icon">📞</span> Last Resort</h2><p class="muted">No supervisors or wingmen were saved to your profile.</p></div>`;
 }
 
 const currentSupervisor = supervisors.find((sup) => sup.status === 'pending' || !sup.status) || supervisors[0];
 const acceptedSupervisor = supervisors.find((sup) => sup.status === 'accepted');
 
-let html = `<div class="card"><h2><span class="icon">📞</span> Supervisor Escalation</h2>`;
+let html = `<div class="card"><h2><span class="icon">📞</span> Supervisor or Wingman Escalation</h2>`;
 
 if (acceptedSupervisor) {
-html += `<p class="muted"><strong>${escapeHTML(acceptedSupervisor.name || 'Supervisor')}</strong> is on the way. Phone: <a class="link" href="tel:${escapeHTML(acceptedSupervisor.phone)}">${escapeHTML(acceptedSupervisor.phone)}</a></p>`;
+html += `<p class="muted"><strong>${escapeHTML(acceptedSupervisor.name || 'Supervisor or Wingman')}</strong> is on the way. Phone: <a class="link" href="tel:${escapeHTML(acceptedSupervisor.phone)}">${escapeHTML(acceptedSupervisor.phone)}</a></p>`;
 } else if (currentSupervisor) {
-html += `<p class="muted">Contacting <strong>${escapeHTML(currentSupervisor.name || 'Supervisor')}</strong> at <a class="link" href="tel:${escapeHTML(currentSupervisor.phone)}">${escapeHTML(currentSupervisor.phone)}</a>.</p>`;
+html += `<p class="muted">Contacting <strong>${escapeHTML(currentSupervisor.name || 'Supervisor or Wingman')}</strong> at <a class="link" href="tel:${escapeHTML(currentSupervisor.phone)}">${escapeHTML(currentSupervisor.phone)}</a>.</p>`;
 }
 
 html += `</div>`;
@@ -1225,13 +1350,17 @@ return;
 }
 
 const supervisors = Array.from(refs.supRows.querySelectorAll('[data-sup-phone]'))
-.map((input) => ({ order: Number(input.dataset.supPhone), phone: input.value.trim() }))
+.map((input) => {
+const order = Number(input.dataset.supPhone);
+const nameInput = refs.supRows.querySelector(`[data-sup-name="${order}"]`);
+return { order, phone: input.value.trim(), name: nameInput ? nameInput.value.trim() : '' };
+})
 .filter((supervisor) => supervisor.phone);
 const invalidSupervisor = supervisors.find((supervisor) => !isValidPhone(supervisor.phone));
 if (invalidSupervisor) {
 const input = refs.supRows.querySelector(`[data-sup-phone="${invalidSupervisor.order}"]`);
 setInvalid(input, null, true);
-toast('Please enter a valid phone number for each supervisor.', 'error');
+toast('Please enter a valid phone number for each supervisor or wingman.', 'error');
 return;
 }
 
@@ -1279,7 +1408,7 @@ if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
 refs.locStatus.textContent = 'Could not read your location. Please try again.';
 toast('Could not read your location. Please try again.', 'error');
 } else {
-state.pendingLocation = { lat: latitude, lng: longitude };
+state.pendingLocation = { lat: latitude, lng: longitude, accuracy: position.coords.accuracy, at: Date.now() };
 refs.locStatus.textContent = 'Location shared.';
 toast('Your location is ready to share with the driver.', 'success');
 }
@@ -1296,7 +1425,7 @@ const message = error.code === 1
 refs.locStatus.textContent = message;
 refs.getLocation.disabled = false;
 toast(message, 'error');
-}, { enableHighAccuracy: true, timeout: 15000 });
+}, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
 });
 
 refs.submitRequest.addEventListener('click', () => {
