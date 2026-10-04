@@ -631,15 +631,54 @@ border-color: #c73b35;
       input=document.getElementById('access-code'),
       err=document.getElementById('access-error'),
       btn=document.getElementById('access-submit');
+  var KEY='accessLockState',MAX=3,DUR=[60,180,300,600,900],timer=null;
+  function load(){
+    try{var s=JSON.parse(localStorage.getItem(KEY));
+      if(s&&typeof s==='object')return{attempts:+s.attempts||0,level:+s.level||0,until:+s.until||0};
+    }catch(e){}
+    return{attempts:0,level:0,until:0};
+  }
+  var st=load();
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+  function showErr(msg){err.textContent=msg;err.style.display='block';}
+  function tick(){
+    var left=Math.ceil((st.until-Date.now())/1000);
+    if(left<=0){
+      clearInterval(timer);timer=null;
+      st.until=0;st.attempts=0;save();
+      err.style.display='none';input.disabled=false;btn.disabled=false;input.focus();
+      return;
+    }
+    showErr('Too many attempts. Try again in '+Math.floor(left/60)+':'+('0'+left%60).slice(-2));
+  }
+  function startLockout(){
+    input.value='';input.disabled=true;btn.disabled=true;
+    if(timer)clearInterval(timer);
+    tick();
+    if(st.until>Date.now())timer=setInterval(tick,250);
+  }
   function unlock(){
+    if(st.until>Date.now())return;
     if(input.value.trim()===ACCESS_CODE){
+      try{localStorage.removeItem(KEY);}catch(e){}
       lock.style.display='none';err.style.display='none';input.value='';
     }else{
-      err.style.display='block';input.value='';input.focus();
+      st.attempts++;input.value='';
+      if(st.attempts>=MAX){
+        st.until=Date.now()+DUR[Math.min(st.level,DUR.length-1)]*1000;
+        st.level++;save();startLockout();
+      }else{
+        save();
+        var r=MAX-st.attempts;
+        showErr('Incorrect code. '+r+' attempt'+(r===1?'':'s')+' remaining.');
+        input.focus();
+      }
     }
   }
   btn.addEventListener('click',unlock);
   input.addEventListener('keydown',function(e){if(e.key==='Enter')unlock();});
+  if(st.until>Date.now())startLockout();
+  else if(st.until){st.until=0;st.attempts=0;save();}
   input.focus();
 })();
 </script>
