@@ -969,6 +969,14 @@ refs.dotRequest.classList.toggle('show', !!(profile && pendingReqs.some((r) => r
 refs.dotDash.classList.toggle('show', !!(dd && dd.available && pendingReqs.length > 0));
 }
 
+const AADD_CONTACT = { order: 1, name: 'AADD', phone: '660-624-2732' };
+
+function withDefaultContact(list) {
+const digits = (p) => String(p || '').replace(/\D/g, '');
+const others = (Array.isArray(list) ? list : []).filter((s) => s && digits(s.phone) !== digits(AADD_CONTACT.phone));
+return [AADD_CONTACT, ...others];
+}
+
 function buildSupervisorRows(existing = []) {
 const rows = Array.from({ length: 6 }, (_, index) => {
 const order = index + 1;
@@ -1095,10 +1103,15 @@ refs.reqNoProfile.style.display = 'none';
 refs.reqFormWrap.style.display = 'block';
 
 // Build share options
-const supervisors = profile.supervisors || [];
-let shareHTML = '';
+const supervisors = withDefaultContact(profile.supervisors);
+let shareHTML = `<div class="card">
+      <h2><span class="icon">🚨</span> AADD</h2>
+      <p class="subtitle">${escapeHTML(AADD_CONTACT.phone)}</p>
+      <a class="btn btn-outline" href="tel:${AADD_CONTACT.phone.replace(/\D/g, '')}">📞 Call AADD</a>
+      <button class="btn btn-primary" onclick="shareLocLive('${AADD_CONTACT.phone}')">📍 Share My Exact Location with AADD</button>
+    </div>`;
 if (supervisors.length > 0) {
-shareHTML = '<div class="card">';
+shareHTML += '<div class="card">';
 shareHTML += '<h2><span class="icon">👥</span> Quick Share</h2>';
 shareHTML += '<p class="subtitle">Share your location with a supervisor or colleague.</p>';
 supervisors.forEach((sup) => {
@@ -1184,6 +1197,22 @@ const { latitude, longitude } = state.pendingLocation;
 const url = `https://maps.google.com/?q=${latitude},${longitude}`;
 const text = `I need a safe ride from this location: ${url}`;
 window.location.href = `sms:${phone}?body=${encodeURIComponent(text)}`;
+}
+
+function shareLocLive(phone) {
+if (!navigator.geolocation) {
+toast('Geolocation not supported', 'error');
+return;
+}
+toast('Getting your exact location...', 'success');
+navigator.geolocation.getCurrentPosition(
+(pos) => {
+state.pendingLocation = pos.coords;
+shareLoc(phone, 'AADD');
+},
+() => toast('Location access denied', 'error'),
+{ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+);
 }
 
 function submitRequest() {
