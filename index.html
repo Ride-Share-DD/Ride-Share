@@ -631,7 +631,13 @@ border-color: #c73b35;
       input=document.getElementById('access-code'),
       err=document.getElementById('access-error'),
       btn=document.getElementById('access-submit');
-  var KEY='accessLockState',MAX=3,DUR=[60,180,300,600,900],timer=null;
+  var KEY='accessLockState',SESSION_KEY='accessUnlocked',MAX=3,DUR=[60,180,300,600,900],timer=null;
+  try{
+    if(sessionStorage.getItem(SESSION_KEY)==='1'){
+      lock.style.display='none';
+      return;
+    }
+  }catch(e){}
   function load(){
     try{var s=JSON.parse(localStorage.getItem(KEY));
       if(s&&typeof s==='object')return{attempts:+s.attempts||0,level:+s.level||0,until:+s.until||0};
@@ -660,6 +666,7 @@ border-color: #c73b35;
   function unlock(){
     if(st.until>Date.now())return;
     if(input.value.trim()===ACCESS_CODE){
+      try{sessionStorage.setItem(SESSION_KEY,'1');}catch(e){}
       try{localStorage.removeItem(KEY);}catch(e){}
       lock.style.display='none';err.style.display='none';input.value='';
     }else{
