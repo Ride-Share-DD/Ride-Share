@@ -483,7 +483,7 @@ transform: translateX(-50%);
 top: 14px;
 width: calc(100% - 32px);
 max-width: 448px;
-z-index: 50;
+z-index: 201;
 display: flex;
 flex-direction: column;
 gap: 8px;
@@ -549,8 +549,21 @@ border-radius: 16px;
 padding: 24px;
 max-width: 300px;
 width: 90%;
+max-height: 90vh;
+overflow-y: auto;
 box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
+
+.settings-modal-content details {
+border: 1px solid var(--border);
+border-radius: 10px;
+padding: 12px;
+margin-bottom: 10px;
+background: var(--card);
+}
+.settings-modal-content summary { cursor: pointer; font-weight: 600; color: var(--gold-light); }
+.settings-modal-content details p { font-size: 13px; line-height: 1.5; color: var(--text); }
+.settings-modal-content details a { color: var(--gold-light); }
 
 .settings-modal-content h2 {
 margin: 0 0 20px;
@@ -727,11 +740,11 @@ border-color: #c73b35;
 
 <div class="card">
 <h2><span class="icon">🛡️</span> How it works</h2>
-<p class="subtitle">Three ways this keeps you safe:</p>
+<p class="subtitle">How to arrange a safe ride:</p>
 <ol class="muted" style="padding-left:18px; margin:0;">
-<li style="margin-bottom:6px;">Request a ride and share your exact location. Sharing with a supervisor or colleague opens your own messaging app, so the text comes from your number.</li>
-<li style="margin-bottom:6px;">A nearby Designated Driver accepts and comes to get you.</li>
-<li>If no driver is available, your saved supervisors or colleagues are contacted one at a time in the order you set.</li>
+<li style="margin-bottom:6px;">Call AADD or prepare a text with your pickup location and destination. Send the text in your messaging app.</li>
+<li style="margin-bottom:6px;">Confirm your ride arrangements with AADD and show your CAC when the driver arrives.</li>
+<li>If no driver is available, contact a saved supervisor or colleague. Contacts are not notified automatically.</li>
 </ol>
 </div>
 
@@ -742,37 +755,17 @@ border-color: #c73b35;
 <section id="view-rider-profile" class="view">
 <div class="card">
 <h2><span class="icon">👤</span> My Profile</h2>
-<p class="subtitle">Save your phone number and supervisor or colleague notification order.</p>
+<p class="subtitle">Save your phone number and supervisor or colleague contacts.</p>
 <label>Your Phone Number</label>
 <input type="tel" id="r-phone" placeholder="(555) 555-5555" />
 <div class="field-error" id="r-phone-err">Please enter a valid phone number.</div>
 </div>
 
 <div class="card">
-<h2><span class="icon">📞</span> Supervisor or Colleague Notification Order</h2>
-<p class="subtitle">Add up to 6 supervisors or colleagues in the order you want them contacted if no driver is available.</p>
+<h2><span class="icon">📞</span> Supervisor or Colleague Contacts</h2>
+<p class="subtitle">Add up to 6 supervisors or colleagues to contact yourself if no driver is available.</p>
 <div id="sup-rows"></div>
 <button class="btn btn-primary" id="save-profile">Save Profile</button>
-</div>
-</section>
-
-<section id="view-dd-profile" class="view">
-<div class="card">
-<h2><span class="icon">🚗</span> Designated Driver Profile</h2>
-<p class="subtitle">Only users with a completed DD profile can view and accept ride requests.</p>
-<label>Phone Number</label>
-<input type="tel" id="dd-phone" placeholder="(555) 555-5555" />
-<div class="field-error" id="dd-phone-err">Please enter a valid phone number.</div>
-<label>Vehicle Description (optional)</label>
-<input type="text" id="dd-vehicle" placeholder="e.g. Silver Honda Civic" />
-<div class="toggle-wrap">
-<span class="toggle-label">Available Now</span>
-<label class="switch">
-<input type="checkbox" id="dd-available" />
-<span class="slider"></span>
-</label>
-</div>
-<button class="btn btn-primary" id="save-dd-profile">Save DD Profile</button>
 </div>
 </section>
 
@@ -788,9 +781,9 @@ Save your profile first before requesting a ride.
 <div id="req-form-wrap">
 <div class="card">
 <h2><span class="icon">📍</span> Pickup Location</h2>
-<p class="subtitle">Share your exact GPS location so a driver can find you fast.</p>
-<button class="btn btn-outline" id="get-location">Share My Exact Location</button>
-<p class="muted" id="loc-status" style="margin-top:10px;">Location not yet shared.</p>
+<p class="subtitle">Get your GPS location to include in a text message.</p>
+<button class="btn btn-outline" id="get-location">Get My Exact Location</button>
+<p class="muted" id="loc-status" style="margin-top:10px;">Location not yet obtained.</p>
 </div>
 
 <div id="share-sup-wrap"></div>
@@ -799,22 +792,10 @@ Save your profile first before requesting a ride.
 <h2><span class="icon">🏁</span> Drop-off Destination</h2>
 <label>Where do you want to be dropped off?</label>
 <input type="text" id="dropoff" placeholder="Address or description" />
-<button class="btn btn-primary" id="submit-request">Request a Ride</button>
+<p class="subtitle">This opens your messaging app. Send the prepared text to request a ride.</p>
+<button class="btn btn-primary" id="submit-request">Text AADD to Request a Ride</button>
 </div>
 </div>
-
-<div id="active-request-wrap"></div>
-</section>
-
-<section id="view-dashboard" class="view">
-<div id="dash-no-profile" class="card" style="display:none;">
-<div class="empty">
-<span class="icon">🚗</span>
-You need a saved DD profile before you can view or accept ride requests.
-</div>
-<button class="btn btn-outline" data-go="dd-profile">Set Up DD Profile</button>
-</div>
-<div id="dash-content"></div>
 </section>
 </main>
 
@@ -825,18 +806,26 @@ Ride-Share prototype
 <nav class="bottom-nav">
 <button data-view="home" class="active"><span class="nav-icon">🏠</span>Home</button>
 <button data-view="rider-profile"><span class="nav-icon">👤</span>Profile<span class="dot" id="dot-profile"></span></button>
-<button data-view="request"><span class="nav-icon">📍</span>Request<span class="dot" id="dot-request"></span></button>
-<button data-view="dashboard"><span class="nav-icon">📋</span>Dashboard<span class="dot" id="dot-dash"></span></button>
+<button data-view="request"><span class="nav-icon">📍</span>Request</button>
 </nav>
 
 <div id="settings-modal" class="settings-modal">
 <div class="settings-modal-content">
 <button class="close-btn" id="close-settings" type="button">×</button>
 <h2>Settings</h2>
-<button type="button" data-settings-go="dd-profile">🚗 DD Profile <span class="dot" id="dot-dd"></span></button>
+<details>
+<summary>Emergency and fallback guidance</summary>
+<p>If you or someone else is in immediate danger or needs urgent medical help, call <a href="tel:911">911</a> in the United States, or your local emergency number.</p>
+<p>If you need a ride, call <a href="tel:6606242732">AADD at 660-624-2732</a>. If no driver is available or you cannot reach AADD, contact a supervisor or colleague yourself and arrange another safe ride. Do not drive impaired.</p>
+</details>
+<details>
+<summary>Privacy controls</summary>
+<p>Your profile and contacts are stored in this browser on this device. Previously saved ride requests and driver profiles may also remain here until deleted. Location is held in the page while preparing a message.</p>
+<p>Calls and texts open your phone's apps. Your location is included in a text draft when you choose to share it; you must send the text yourself. Deleting data here does not delete messages or data held by others. You can change location permission in your browser or device settings.</p>
 <button id="delete-rider-profile" type="button">Delete Rider Profile</button>
-<button id="delete-dd-profile" type="button">Delete DD Profile</button>
-<button id="delete-all-data" class="btn-danger" type="button">Delete All Data</button>
+<button id="delete-ride-history" type="button">Delete Saved Ride History</button>
+<button id="delete-all-data" class="btn-danger" type="button">Delete All App Data</button>
+</details>
 </div>
 </div>
 </div>
@@ -851,19 +840,11 @@ toastWrap: document.getElementById('toast-wrap'),
 homeChecklist: document.getElementById('home-checklist'),
 reqNoProfile: document.getElementById('req-no-profile'),
 reqFormWrap: document.getElementById('req-form-wrap'),
-activeRequestWrap: document.getElementById('active-request-wrap'),
 shareSupWrap: document.getElementById('share-sup-wrap'),
-dashNoProfile: document.getElementById('dash-no-profile'),
-dashContent: document.getElementById('dash-content'),
 rPhone: document.getElementById('r-phone'),
 rPhoneErr: document.getElementById('r-phone-err'),
 supRows: document.getElementById('sup-rows'),
 saveProfile: document.getElementById('save-profile'),
-ddPhone: document.getElementById('dd-phone'),
-ddPhoneErr: document.getElementById('dd-phone-err'),
-ddVehicle: document.getElementById('dd-vehicle'),
-ddAvailable: document.getElementById('dd-available'),
-saveDDProfile: document.getElementById('save-dd-profile'),
 getLocation: document.getElementById('get-location'),
 locStatus: document.getElementById('loc-status'),
 dropoff: document.getElementById('dropoff'),
@@ -872,14 +853,11 @@ settingsBtn: document.getElementById('settings-btn'),
 settingsModal: document.getElementById('settings-modal'),
 closeSettings: document.getElementById('close-settings'),
 deleteRiderProfile: document.getElementById('delete-rider-profile'),
-deleteDDProfile: document.getElementById('delete-dd-profile'),
+deleteRideHistory: document.getElementById('delete-ride-history'),
 deleteAllData: document.getElementById('delete-all-data'),
 navButtons: Array.from(document.querySelectorAll('.bottom-nav button')),
 viewPanels: Array.from(document.querySelectorAll('.view')),
-dotProfile: document.getElementById('dot-profile'),
-dotDd: document.getElementById('dot-dd'),
-dotRequest: document.getElementById('dot-request'),
-dotDash: document.getElementById('dot-dash')
+dotProfile: document.getElementById('dot-profile')
 };
 
 const state = { pendingLocation: null, geoToken: 0 };
@@ -895,10 +873,6 @@ return fallback;
 
 function save(key, val) {
 localStorage.setItem(key, JSON.stringify(val));
-}
-
-function uid() {
-return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
 function escapeHTML(value) {
@@ -947,9 +921,7 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
 
 if (viewName === 'home') renderHomeChecklist();
 if (viewName === 'rider-profile') loadRiderProfileIntoForm();
-if (viewName === 'dd-profile') loadDDProfileIntoForm();
 if (viewName === 'request') renderRequestView();
-if (viewName === 'dashboard') renderDashboard();
 }
 
 refs.navButtons.forEach((button) => {
@@ -958,16 +930,7 @@ button.addEventListener('click', () => goTo(button.dataset.view));
 
 function updateNavDots() {
 const profile = load(LS_PROFILE, null);
-const dd = load(LS_DD, null);
-const requests = load(LS_REQUESTS, []);
-const safeRequests = Array.isArray(requests) ? requests : [];
-
 refs.dotProfile.classList.toggle('show', !profile);
-refs.dotDd.classList.toggle('show', false);
-
-const pendingReqs = safeRequests.filter((r) => r.status === 'pending');
-refs.dotRequest.classList.toggle('show', !!(profile && pendingReqs.some((r) => r.riderPhone === profile.phone)));
-refs.dotDash.classList.toggle('show', !!(dd && dd.available && pendingReqs.length > 0));
 }
 
 const AADD_CONTACT = { order: 1, name: 'AADD', phone: '660-624-2732' };
@@ -986,7 +949,7 @@ return `
         <div class="sup-row">
           <div class="badge-row">
             <span class="badge">${order}</span>
-            <span class="badge-label">${order === 1 ? 'Contacted first' : order === 6 ? 'Last resort' : 'Backup contact'}</span>
+            <span class="badge-label">${order === 1 ? 'First choice' : order === 6 ? 'Last resort' : 'Backup contact'}</span>
           </div>
           <label>Supervisor or Colleague ${order} Name/Label (optional)</label>
           <input type="text" data-sup-name="${order}" placeholder="e.g. Emergency Contact" value="${escapeHTML(sup.name || '')}" />
@@ -1003,13 +966,6 @@ function loadRiderProfileIntoForm() {
 const profile = load(LS_PROFILE, null);
 refs.rPhone.value = profile ? profile.phone || '' : '';
 buildSupervisorRows(profile ? profile.supervisors || [] : []);
-}
-
-function loadDDProfileIntoForm() {
-const dd = load(LS_DD, null);
-refs.ddPhone.value = dd ? dd.phone || '' : '';
-refs.ddVehicle.value = dd ? dd.vehicle || '' : '';
-refs.ddAvailable.checked = dd ? dd.available === true : false;
 }
 
 function saveRiderProfile() {
@@ -1037,53 +993,20 @@ updateNavDots();
 toast('Profile saved successfully!', 'success');
 }
 
-function saveDDProfile() {
-const phone = refs.ddPhone.value.trim();
-if (!isValidPhone(phone)) {
-setInvalid(refs.ddPhone, refs.ddPhoneErr, true);
-return;
-}
-setInvalid(refs.ddPhone, refs.ddPhoneErr, false);
-
-const dd = { phone, vehicle: refs.ddVehicle.value.trim(), available: refs.ddAvailable.checked };
-save(LS_DD, dd);
-updateNavDots();
-toast('DD profile saved!', 'success');
-}
-
 function renderHomeChecklist() {
 const profile = load(LS_PROFILE, null);
-const dd = load(LS_DD, null);
-
-const items = [
-{
-id: 'profile',
-title: 'Save your rider profile',
-subtitle: 'Store your phone & contact list',
-completed: !!profile
-},
-{
-id: 'dd',
-title: 'Set up a DD profile',
-subtitle: 'Start offering or requesting rides',
-completed: !!dd
-}
-];
-
-refs.homeChecklist.innerHTML = items.map((item) => {
-return `
-      <div class="check-item" data-go="${item.id === 'profile' ? 'rider-profile' : 'dd-profile'}" style="cursor:pointer;">
-        <div class="check-circle ${item.completed ? 'done' : ''}">
-          ${item.completed ? '✓' : ''}
+refs.homeChecklist.innerHTML = `
+      <div class="check-item" data-go="rider-profile" style="cursor:pointer;">
+        <div class="check-circle ${profile ? 'done' : ''}">
+          ${profile ? '✓' : ''}
         </div>
         <div class="check-text">
-          <div class="t1">${item.title}</div>
-          <div class="t2">${item.subtitle}</div>
+          <div class="t1">Save your rider profile</div>
+          <div class="t2">Store your phone &amp; contact list</div>
         </div>
         <div class="check-arrow">→</div>
       </div>
     `;
-}).join('');
 
 document.querySelectorAll('.check-item').forEach((item) => {
 item.addEventListener('click', () => goTo(item.dataset.go));
@@ -1096,7 +1019,6 @@ const profile = load(LS_PROFILE, null);
 if (!profile) {
 refs.reqNoProfile.style.display = 'block';
 refs.reqFormWrap.style.display = 'none';
-refs.activeRequestWrap.innerHTML = '';
 return;
 }
 
@@ -1126,37 +1048,6 @@ shareHTML += '</div>';
 }
 refs.shareSupWrap.innerHTML = shareHTML;
 
-// Show active requests
-const requests = load(LS_REQUESTS, []);
-const safeRequests = Array.isArray(requests) ? requests : [];
-const userRequests = safeRequests.filter((r) => r.riderPhone === profile.phone);
-
-let requestHTML = '';
-if (userRequests.length > 0) {
-requestHTML = '<div class="card">';
-requestHTML += '<h2><span class="icon">📍</span> Your Requests</h2>';
-userRequests.forEach((req) => {
-const statusClass = 'pill-' + req.status;
-requestHTML += `
-      <div class="request-item">
-        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
-          <div>
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px;">Pickup: ${escapeHTML(req.pickupLoc || 'Shared')}</div>
-            <div style="font-size:12px;color:var(--muted);">Drop-off: ${escapeHTML(req.dropoff)}</div>
-          </div>
-          <span class="pill ${statusClass}">
-            ${req.status === 'pending' ? '⏳' : req.status === 'accepted' ? '✅' : '❌'} ${req.status}
-          </span>
-        </div>
-      </div>
-    `;
-});
-requestHTML += '</div>';
-}
-refs.activeRequestWrap.innerHTML = requestHTML;
-
-refs.getLocation.addEventListener('click', getLocation);
-refs.submitRequest.addEventListener('click', submitRequest);
 }
 
 function getLocation() {
@@ -1177,13 +1068,13 @@ if (token !== state.geoToken) return;
 state.pendingLocation = pos.coords;
 refs.locStatus.innerHTML = `✓ Location ready: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
 refs.getLocation.disabled = false;
-refs.getLocation.textContent = '📍 Share My Exact Location';
+refs.getLocation.textContent = 'Get My Exact Location';
 toast('Location ready to share!', 'success');
 },
 (err) => {
 if (token !== state.geoToken) return;
 refs.getLocation.disabled = false;
-refs.getLocation.textContent = '📍 Share My Exact Location';
+refs.getLocation.textContent = 'Get My Exact Location';
 toast('Location access denied', 'error');
 }
 );
@@ -1205,20 +1096,26 @@ if (!navigator.geolocation) {
 toast('Geolocation not supported', 'error');
 return;
 }
+state.geoToken++;
+const token = state.geoToken;
+refs.getLocation.disabled = false;
+refs.getLocation.textContent = 'Get My Exact Location';
 toast('Getting your exact location...', 'success');
 navigator.geolocation.getCurrentPosition(
 (pos) => {
+if (token !== state.geoToken) return;
 state.pendingLocation = pos.coords;
+refs.locStatus.textContent = `✓ Location ready: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
 shareLoc(phone, 'AADD');
 },
-() => toast('Location access denied', 'error'),
+() => { if (token === state.geoToken) toast('Location access denied', 'error'); },
 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
 );
 }
 
 function submitRequest() {
 if (!state.pendingLocation) {
-toast('Share your location first', 'error');
+toast('Get your location first', 'error');
 return;
 }
 
@@ -1228,105 +1125,16 @@ toast('Enter drop-off destination', 'error');
 return;
 }
 
-const profile = load(LS_PROFILE, null);
 const { latitude, longitude } = state.pendingLocation;
-
-const request = {
-id: uid(),
-riderPhone: profile.phone,
-pickupLoc: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
-dropoff,
-status: 'pending',
-time: new Date().toLocaleTimeString()
-};
-
-const requests = load(LS_REQUESTS, []);
-const safeRequests = Array.isArray(requests) ? requests : [];
-safeRequests.push(request);
-save(LS_REQUESTS, safeRequests);
-
-updateNavDots();
-refs.dropoff.value = '';
-state.pendingLocation = null;
-refs.locStatus.textContent = 'Location not yet shared.';
-refs.getLocation.textContent = '📍 Share My Exact Location';
-
-toast('Ride request sent!', 'success');
-renderRequestView();
-}
-
-function renderDashboard() {
-const dd = load(LS_DD, null);
-
-if (!dd) {
-refs.dashNoProfile.style.display = 'block';
-refs.dashContent.innerHTML = '';
-return;
-}
-
-refs.dashNoProfile.style.display = 'none';
-
-const requests = load(LS_REQUESTS, []);
-const safeRequests = Array.isArray(requests) ? requests : [];
-const pendingRequests = safeRequests.filter((r) => r.status === 'pending');
-
-if (pendingRequests.length === 0) {
-refs.dashContent.innerHTML = '<div class="empty"><span class="icon">📭</span>No pending ride requests</div>';
-return;
-}
-
-let dashHTML = '<div class="card"><h2><span class="icon">📍</span> Pending Requests</h2>';
-pendingRequests.forEach((req) => {
-dashHTML += `
-    <div class="request-item">
-      <div style="margin-bottom:10px;">
-        <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Pickup</div>
-        <div style="font-size:12px;color:var(--muted);font-family:monospace;">${escapeHTML(req.pickupLoc)}</div>
-      </div>
-      <div style="margin-bottom:10px;">
-        <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Drop-off</div>
-        <div style="font-size:12px;color:var(--muted);">${escapeHTML(req.dropoff)}</div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:12px;">
-        <button class="btn btn-success btn-small" onclick="acceptRequest('${req.id}')">✓ Accept</button>
-        <button class="btn btn-danger btn-small" onclick="rejectRequest('${req.id}')">✕ Reject</button>
-      </div>
-    </div>
-  `;
-});
-dashHTML += '</div>';
-refs.dashContent.innerHTML = dashHTML;
-}
-
-function acceptRequest(reqId) {
-const requests = load(LS_REQUESTS, []);
-const safeRequests = Array.isArray(requests) ? requests : [];
-const req = safeRequests.find((r) => r.id === reqId);
-if (req) {
-req.status = 'accepted';
-save(LS_REQUESTS, safeRequests);
-updateNavDots();
-renderDashboard();
-toast('Request accepted!', 'success');
-}
-}
-
-function rejectRequest(reqId) {
-const requests = load(LS_REQUESTS, []);
-const safeRequests = Array.isArray(requests) ? requests : [];
-const req = safeRequests.find((r) => r.id === reqId);
-if (req) {
-req.status = 'cancelled';
-save(LS_REQUESTS, safeRequests);
-updateNavDots();
-renderDashboard();
-toast('Request rejected', 'success');
-}
+const url = `https://maps.google.com/?q=${latitude},${longitude}`;
+const text = `I need a safe ride. Pickup: ${url}\nDrop-off: ${dropoff}`;
+window.location.href = `sms:${AADD_CONTACT.phone.replace(/\D/g, '')}?body=${encodeURIComponent(text)}`;
 }
 
 // Event listeners
 refs.saveProfile.addEventListener('click', saveRiderProfile);
-refs.saveDDProfile.addEventListener('click', saveDDProfile);
+refs.getLocation.addEventListener('click', getLocation);
+refs.submitRequest.addEventListener('click', submitRequest);
 
 refs.settingsBtn.addEventListener('click', () => {
 refs.settingsModal.classList.add('active');
@@ -1340,38 +1148,59 @@ document.querySelectorAll('[data-go]').forEach((btn) => {
 btn.addEventListener('click', () => goTo(btn.dataset.go));
 });
 
-document.querySelectorAll('[data-settings-go]').forEach((btn) => {
-btn.addEventListener('click', () => goTo(btn.dataset.settingsGo));
-});
-
 refs.deleteRiderProfile.addEventListener('click', () => {
 if (confirm('Delete your rider profile?')) {
-try { localStorage.removeItem(LS_PROFILE); } catch (e) {}
+try {
+localStorage.removeItem(LS_PROFILE);
+} catch (e) {
+toast('Could not delete rider profile', 'error');
+return;
+}
+refs.rPhone.value = '';
+refs.supRows.innerHTML = '';
+refs.shareSupWrap.innerHTML = '';
 updateNavDots();
 goTo('home');
 toast('Rider profile deleted', 'success');
 }
 });
 
-refs.deleteDDProfile.addEventListener('click', () => {
-if (confirm('Delete your DD profile?')) {
-try { localStorage.removeItem(LS_DD); } catch (e) {}
-updateNavDots();
-goTo('home');
-toast('DD profile deleted', 'success');
+refs.deleteRideHistory.addEventListener('click', () => {
+if (confirm('Delete previously saved ride history from this browser?')) {
+try {
+localStorage.removeItem(LS_REQUESTS);
+} catch (e) {
+toast('Could not delete ride history', 'error');
+return;
+}
+toast('Saved ride history deleted', 'success');
 }
 });
 
 refs.deleteAllData.addEventListener('click', () => {
-if (confirm('Delete all data? This cannot be undone.')) {
+if (confirm('Delete all app data from this browser? This cannot be undone.')) {
 try {
 localStorage.removeItem(LS_PROFILE);
 localStorage.removeItem(LS_DD);
 localStorage.removeItem(LS_REQUESTS);
-} catch (e) {}
+localStorage.removeItem('accessLockState');
+sessionStorage.removeItem('accessUnlocked');
+} catch (e) {
+toast('Could not delete all app data', 'error');
+return;
+}
+state.geoToken++;
+state.pendingLocation = null;
+refs.rPhone.value = '';
+refs.supRows.innerHTML = '';
+refs.shareSupWrap.innerHTML = '';
+refs.dropoff.value = '';
+refs.getLocation.disabled = false;
+refs.getLocation.textContent = 'Get My Exact Location';
+refs.locStatus.textContent = 'Location not yet obtained.';
 updateNavDots();
 goTo('home');
-toast('All data deleted', 'success');
+toast('App data deleted', 'success');
 }
 });
 
