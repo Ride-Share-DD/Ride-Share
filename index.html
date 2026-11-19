@@ -16,7 +16,7 @@
 --card: #16223f;
 --card2: #1b2a4d;
 --text: #f3f5fb;
---muted: #9aa5c0;
+--muted: #c1cbe0;
 --danger: #e0524d;
 --success: #3fb872;
 --border: #243357;
@@ -89,6 +89,8 @@ color: var(--gold-light);
 font-size: 24px;
 cursor: pointer;
 padding: 8px;
+min-width: 44px;
+min-height: 44px;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -153,12 +155,12 @@ gap: 8px;
 }
 
 .card h2 .icon { font-size: 18px; }
-.card .subtitle { margin: 0 0 12px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.card .subtitle { margin: 0 0 12px; font-size: 15px; color: var(--muted); line-height: 1.5; }
 .card h3 { margin: 0 0 8px; font-size: 14px; color: var(--text); }
 
 label {
 display: block;
-font-size: 12px;
+font-size: 15px;
 color: var(--muted);
 margin: 10px 0 4px;
 font-weight: 600;
@@ -172,7 +174,7 @@ border-radius: 10px;
 border: 1.5px solid var(--border);
 background: #0e1a36;
 color: var(--text);
-font-size: 14.5px;
+font-size: 16px;
 transition: border-color .15s, box-shadow .15s;
 }
 
@@ -187,11 +189,11 @@ border-color: var(--danger);
 box-shadow: 0 0 0 3px rgba(224,82,77,.15);
 }
 
-input::placeholder { color: #5c6a8c; }
+input::placeholder { color: #a7b4cf; }
 
 .field-error {
-color: var(--danger);
-font-size: 11.5px;
+color: #ffaaa6;
+font-size: 14px;
 margin-top: 4px;
 display: none;
 }
@@ -209,6 +211,9 @@ background: var(--card2);
 border: 1px solid var(--border);
 cursor: pointer;
 transition: transform .12s, border-color .12s;
+width: 100%;
+text-align: left;
+font-family: inherit;
 }
 
 .check-item:hover {
@@ -238,8 +243,8 @@ border-color: var(--success);
 }
 
 .check-text { flex: 1; }
-.check-text .t1 { font-size: 13.5px; font-weight: 600; color: var(--text); }
-.check-text .t2 { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.check-text .t1 { display: block; font-size: 15px; font-weight: 600; color: var(--text); }
+.check-text .t2 { display: block; font-size: 14px; color: var(--muted); margin-top: 1px; }
 .check-arrow { color: var(--muted); font-size: 16px; }
 
 .sup-row {
@@ -280,7 +285,7 @@ width: 100%;
 padding: 13px;
 border-radius: 12px;
 border: none;
-font-size: 14.5px;
+font-size: 16px;
 font-weight: 700;
 cursor: pointer;
 margin-top: 12px;
@@ -288,12 +293,13 @@ text-align: center;
 text-decoration: none;
 transition: transform .1s, filter .15s;
 letter-spacing: .2px;
+min-height: 48px;
 }
 
 button.btn:active, a.btn:active { transform: scale(.98); }
 .btn-primary { background: linear-gradient(180deg, var(--gold-light), var(--gold-dark)); color: #1a1305; box-shadow: 0 3px 10px rgba(212,175,55,.25); }
 .btn-primary:hover { filter: brightness(1.05); }
-.btn-outline { background: transparent; border: 1.5px solid var(--gold); color: var(--gold-light); }
+button.btn-outline, a.btn-outline { background: transparent; border: 1.5px solid var(--gold); color: var(--gold-light); }
 .btn-outline:hover { background: rgba(212,175,55,.08); }
 .btn-danger { background: var(--danger); color: #fff; }
 .btn-success { background: linear-gradient(180deg,#4fd48d,var(--success)); color: #06210f; }
@@ -303,7 +309,12 @@ button.btn:active, a.btn:active { transform: scale(.98); }
 .btn-row { display: flex; }
 .btn-row .btn { margin-top: 12px; }
 
-.muted { color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+.muted { color: var(--muted); font-size: 15px; line-height: 1.55; }
+
+button:focus-visible, a:focus-visible, summary:focus-visible {
+outline: 3px solid var(--gold-light);
+outline-offset: 3px;
+}
 
 .pill {
 display: inline-flex;
@@ -380,7 +391,7 @@ border: 1px solid var(--gold);
 border-radius: 12px;
 background: linear-gradient(135deg, #2b230d, #1b170c);
 color: var(--gold-light);
-font-size: 12.5px;
+font-size: 15px;
 line-height: 1.5;
 overflow-wrap: anywhere;
 box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
@@ -412,7 +423,7 @@ color: #fff3b5;
 @media (max-width: 360px) {
 .banner {
 padding: 11px 12px;
-font-size: 12px;
+font-size: 14px;
 gap: 8px;
 }
 }
@@ -448,7 +459,7 @@ font-family: inherit;
 background: none;
 border: none;
 color: var(--muted);
-font-size: 11px;
+font-size: 14px;
 cursor: pointer;
 display: flex;
 flex-direction: column;
@@ -562,7 +573,7 @@ margin-bottom: 10px;
 background: var(--card);
 }
 .settings-modal-content summary { cursor: pointer; font-weight: 600; color: var(--gold-light); }
-.settings-modal-content details p { font-size: 13px; line-height: 1.5; color: var(--text); }
+.settings-modal-content details p { font-size: 15px; line-height: 1.5; color: var(--text); }
 .settings-modal-content details a { color: var(--gold-light); }
 
 .settings-modal-content h2 {
@@ -630,11 +641,11 @@ border-color: #c73b35;
 <div id="lock-screen" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#0b1d3a,#060f22);padding:20px;">
   <div style="width:100%;max-width:420px;background:#16223f;border:1px solid #243357;border-radius:16px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.45);">
     <h2 style="margin:0 0 8px;color:#e9cc6e;font-size:20px;">🔒 Site Access</h2>
-    <p style="margin:0 0 12px;color:#9aa5c0;font-size:14px;line-height:1.5;">Enter the access code to continue.</p>
-    <label for="access-code" style="display:block;margin:0 0 6px;color:#9aa5c0;font-size:12px;">Access Code</label>
-    <input id="access-code" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter code" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1.5px solid #243357;background:#0e1a36;color:#f3f5fb;font-size:14.5px;" />
-    <div id="access-error" role="alert" style="display:none;color:#e0524d;font-size:12px;margin-bottom:10px;">Incorrect code. Please try again.</div>
-    <button id="access-submit" type="button" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#e9cc6e,#b8941f);color:#1a1305;font-weight:700;cursor:pointer;font-size:14.5px;">Submit</button>
+    <p style="margin:0 0 12px;color:#c1cbe0;font-size:15px;line-height:1.5;">Enter the access code to continue.</p>
+    <label for="access-code" style="display:block;margin:0 0 6px;color:#c1cbe0;font-size:15px;">Access Code</label>
+    <input id="access-code" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter code" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1.5px solid #243357;background:#0e1a36;color:#f3f5fb;font-size:16px;" />
+    <div id="access-error" role="alert" style="display:none;color:#ffaaa6;font-size:14px;margin-bottom:10px;">Incorrect code. Please try again.</div>
+    <button id="access-submit" type="button" style="width:100%;min-height:48px;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#e9cc6e,#b8941f);color:#1a1305;font-weight:700;cursor:pointer;font-size:16px;">Submit</button>
   </div>
 </div>
 <script>
@@ -710,7 +721,7 @@ border-color: #c73b35;
 <img class="hero-svg" src="background_2.jpg" alt="" />
 <div class="hero-overlay">
 <div class="hero-top">
-<button class="gear-btn" id="settings-btn" type="button">⚙️</button>
+<button class="gear-btn" id="settings-btn" type="button" aria-label="Settings">⚙️</button>
 </div>
 <div>
 <h1>Ride-Share</h1>
@@ -722,14 +733,22 @@ border-color: #c73b35;
 <main>
 <section id="view-home" class="view active">
 <div class="card" style="background: linear-gradient(180deg, var(--card2), var(--card)); border-color: var(--gold);">
-<h2><span class="icon">☎️</span> Hotline</h2>
-<p class="subtitle">Need a ride right now? Call the hotline directly.</p>
-<a class="btn btn-primary" href="tel:6606242732">📞 Call 660-624-2732</a>
+<h2><span class="icon">☎️</span> Need a safe ride?</h2>
+<p class="subtitle">Contact AADD now. You do not need a profile.</p>
+<a class="btn btn-primary" href="tel:6606242732">Call AADD: 660-624-2732</a>
+<button class="btn btn-outline" type="button" data-go="request">Text AADD for a ride</button>
 </div>
 
 <div class="card">
-<h2><span class="icon">🚀</span> Get Started</h2>
-<p class="subtitle">Complete these steps to be ready for a safe ride, day or night.</p>
+<h2><span class="icon">🆘</span> Need help now?</h2>
+<p class="subtitle">If AADD cannot help, contact a supervisor or colleague yourself and arrange another safe ride. Do not drive impaired.</p>
+<p class="subtitle">For immediate danger or urgent medical help, call 911 in the United States or your local emergency number.</p>
+<a class="btn btn-outline" href="tel:911">Call 911 (U.S. emergencies)</a>
+</div>
+
+<div class="card">
+<h2><span class="icon">🚀</span> Optional: Save contacts</h2>
+<p class="subtitle">Save your profile to quickly share your pickup location with a supervisor or colleague.</p>
 <div class="checklist" id="home-checklist"></div>
 </div>
 
@@ -756,8 +775,8 @@ border-color: #c73b35;
 <div class="card">
 <h2><span class="icon">👤</span> My Profile</h2>
 <p class="subtitle">Save your phone number and supervisor or colleague contacts.</p>
-<label>Your Phone Number</label>
-<input type="tel" id="r-phone" placeholder="(555) 555-5555" />
+<label for="r-phone">Your Phone Number</label>
+<input type="tel" id="r-phone" placeholder="(555) 555-5555" aria-describedby="r-phone-err" />
 <div class="field-error" id="r-phone-err">Please enter a valid phone number.</div>
 </div>
 
@@ -770,32 +789,30 @@ border-color: #c73b35;
 </section>
 
 <section id="view-request" class="view">
-<div id="req-no-profile" class="card" style="display:none;">
-<div class="empty">
-<span class="icon">👤</span>
-Save your profile first before requesting a ride.
-</div>
-<button class="btn btn-outline" data-go="rider-profile">Go to My Profile</button>
+<div class="card">
+<h2><span class="icon">📍</span> 1. Pickup location</h2>
+<p class="subtitle">Use your current location, or type an address or description below.</p>
+<button class="btn btn-outline" id="get-location">Get My Exact Location</button>
+<p class="muted" id="loc-status" role="status" aria-live="polite" style="margin-top:10px;">Location not yet obtained.</p>
+<label for="pickup">Or enter your pickup location</label>
+<input type="text" id="pickup" placeholder="Address or description" aria-describedby="pickup-err" />
+<div class="field-error" id="pickup-err" role="alert">Get your location or enter a pickup location.</div>
 </div>
 
-<div id="req-form-wrap">
 <div class="card">
-<h2><span class="icon">📍</span> Pickup Location</h2>
-<p class="subtitle">Get your GPS location to include in a text message.</p>
-<button class="btn btn-outline" id="get-location">Get My Exact Location</button>
-<p class="muted" id="loc-status" style="margin-top:10px;">Location not yet obtained.</p>
+<h2><span class="icon">🏁</span> 2. Drop-off destination</h2>
+<label for="dropoff">Where do you want to be dropped off?</label>
+<input type="text" id="dropoff" placeholder="Address or description" aria-describedby="dropoff-err" />
+<div class="field-error" id="dropoff-err" role="alert">Enter a drop-off destination.</div>
+</div>
+
+<div class="card">
+<h2><span class="icon">💬</span> 3. Text AADD</h2>
+<p class="subtitle">This opens your messaging app with your pickup and destination. Review the text and press Send to request a ride.</p>
+<button class="btn btn-primary" id="submit-request">Text AADD to Request a Ride</button>
 </div>
 
 <div id="share-sup-wrap"></div>
-
-<div class="card">
-<h2><span class="icon">🏁</span> Drop-off Destination</h2>
-<label>Where do you want to be dropped off?</label>
-<input type="text" id="dropoff" placeholder="Address or description" />
-<p class="subtitle">This opens your messaging app. Send the prepared text to request a ride.</p>
-<button class="btn btn-primary" id="submit-request">Text AADD to Request a Ride</button>
-</div>
-</div>
 </section>
 </main>
 
@@ -811,7 +828,7 @@ Ride-Share prototype
 
 <div id="settings-modal" class="settings-modal">
 <div class="settings-modal-content">
-<button class="close-btn" id="close-settings" type="button">×</button>
+<button class="close-btn" id="close-settings" type="button" aria-label="Close settings">×</button>
 <h2>Settings</h2>
 <details>
 <summary>Emergency and fallback guidance</summary>
@@ -838,8 +855,6 @@ const LS_REQUESTS = 'rideshare_requests';
 const refs = {
 toastWrap: document.getElementById('toast-wrap'),
 homeChecklist: document.getElementById('home-checklist'),
-reqNoProfile: document.getElementById('req-no-profile'),
-reqFormWrap: document.getElementById('req-form-wrap'),
 shareSupWrap: document.getElementById('share-sup-wrap'),
 rPhone: document.getElementById('r-phone'),
 rPhoneErr: document.getElementById('r-phone-err'),
@@ -847,7 +862,10 @@ supRows: document.getElementById('sup-rows'),
 saveProfile: document.getElementById('save-profile'),
 getLocation: document.getElementById('get-location'),
 locStatus: document.getElementById('loc-status'),
+pickup: document.getElementById('pickup'),
+pickupErr: document.getElementById('pickup-err'),
 dropoff: document.getElementById('dropoff'),
+dropoffErr: document.getElementById('dropoff-err'),
 submitRequest: document.getElementById('submit-request'),
 settingsBtn: document.getElementById('settings-btn'),
 settingsModal: document.getElementById('settings-modal'),
@@ -903,7 +921,10 @@ return /\d{7,}/.test(String(value).replace(/\D/g, ''));
 }
 
 function setInvalid(inputEl, errEl, isInvalid) {
-if (inputEl) inputEl.classList.toggle('invalid', isInvalid);
+if (inputEl) {
+inputEl.classList.toggle('invalid', isInvalid);
+inputEl.setAttribute('aria-invalid', String(isInvalid));
+}
 if (errEl) errEl.classList.toggle('show', isInvalid);
 }
 
@@ -951,10 +972,10 @@ return `
             <span class="badge">${order}</span>
             <span class="badge-label">${order === 1 ? 'First choice' : order === 6 ? 'Last resort' : 'Backup contact'}</span>
           </div>
-          <label>Supervisor or Colleague ${order} Name/Label (optional)</label>
-          <input type="text" data-sup-name="${order}" placeholder="e.g. Emergency Contact" value="${escapeHTML(sup.name || '')}" />
-          <label>Supervisor or Colleague ${order} Phone Number</label>
-          <input type="tel" data-sup-phone="${order}" placeholder="555-555-5555" value="${escapeHTML(sup.phone)}" />
+          <label for="sup-name-${order}">Supervisor or Colleague ${order} Name/Label (optional)</label>
+          <input type="text" id="sup-name-${order}" data-sup-name="${order}" placeholder="e.g. Emergency Contact" value="${escapeHTML(sup.name || '')}" />
+          <label for="sup-phone-${order}">Supervisor or Colleague ${order} Phone Number</label>
+          <input type="tel" id="sup-phone-${order}" data-sup-phone="${order}" placeholder="555-555-5555" value="${escapeHTML(sup.phone)}" />
         </div>
       `;
 }).join('');
@@ -996,16 +1017,16 @@ toast('Profile saved successfully!', 'success');
 function renderHomeChecklist() {
 const profile = load(LS_PROFILE, null);
 refs.homeChecklist.innerHTML = `
-      <div class="check-item" data-go="rider-profile" style="cursor:pointer;">
-        <div class="check-circle ${profile ? 'done' : ''}">
+      <button type="button" class="check-item" data-go="rider-profile">
+        <span class="check-circle ${profile ? 'done' : ''}" aria-hidden="true">
           ${profile ? '✓' : ''}
-        </div>
-        <div class="check-text">
-          <div class="t1">Save your rider profile</div>
-          <div class="t2">Store your phone &amp; contact list</div>
-        </div>
-        <div class="check-arrow">→</div>
-      </div>
+        </span>
+        <span class="check-text">
+          <span class="t1">Save your rider profile</span>
+          <span class="t2">Store your phone &amp; contact list</span>
+        </span>
+        <span class="check-arrow" aria-hidden="true">→</span>
+      </button>
     `;
 
 document.querySelectorAll('.check-item').forEach((item) => {
@@ -1015,119 +1036,102 @@ item.addEventListener('click', () => goTo(item.dataset.go));
 
 function renderRequestView() {
 const profile = load(LS_PROFILE, null);
-
-if (!profile) {
-refs.reqNoProfile.style.display = 'block';
-refs.reqFormWrap.style.display = 'none';
-return;
-}
-
-refs.reqNoProfile.style.display = 'none';
-refs.reqFormWrap.style.display = 'block';
-
-// Build share options
-const supervisors = withDefaultContact(profile.supervisors);
-let shareHTML = `<div class="card">
-      <h2><span class="icon">🚨</span> AADD</h2>
-      <p class="subtitle">${escapeHTML(AADD_CONTACT.phone)}</p>
-      <a class="btn btn-outline" href="tel:${AADD_CONTACT.phone.replace(/\D/g, '')}">📞 Call AADD</a>
-      <button class="btn btn-primary" onclick="shareLocLive('${AADD_CONTACT.phone}')">📍 Share My Exact Location with AADD</button>
-    </div>`;
+const supervisors = withDefaultContact(profile ? profile.supervisors : []);
+let shareHTML = '';
 if (supervisors.length > 0) {
 shareHTML += '<div class="card">';
-shareHTML += '<h2><span class="icon">👥</span> Quick Share</h2>';
-shareHTML += '<p class="subtitle">Share your location with a supervisor or colleague.</p>';
+shareHTML += '<h2><span class="icon">👥</span> Share pickup location</h2>';
+shareHTML += '<p class="subtitle">Get your location or enter it above, then choose a contact. You must send the text yourself.</p>';
 supervisors.forEach((sup) => {
+const phone = String(sup.phone || '').replace(/[^\d+]/g, '');
+if (!phone) return;
 shareHTML += `
-      <button class="btn btn-small" onclick="shareLoc('${sup.phone}', '${escapeHTML(sup.name)}')">
-        📱 ${escapeHTML(sup.name || sup.phone)}
+      <button class="btn btn-outline" type="button" data-share-phone="${escapeHTML(phone)}">
+        Text location to ${escapeHTML(sup.name || sup.phone)}
       </button>
     `;
 });
 shareHTML += '</div>';
 }
 refs.shareSupWrap.innerHTML = shareHTML;
-
+refs.shareSupWrap.querySelectorAll('[data-share-phone]').forEach((button) => {
+button.addEventListener('click', () => shareLoc(button.dataset.sharePhone));
+});
 }
 
 function getLocation() {
 state.geoToken++;
 const token = state.geoToken;
+state.pendingLocation = null;
 
 if (!navigator.geolocation) {
-toast('Geolocation not supported', 'error');
+refs.locStatus.textContent = 'Location is unavailable in this browser. Enter your pickup location below.';
 return;
 }
 
 refs.getLocation.disabled = true;
-refs.getLocation.textContent = '📍 Getting location...';
+refs.getLocation.textContent = 'Getting location...';
+refs.locStatus.textContent = 'Getting your location. Allow location access if prompted.';
 
 navigator.geolocation.getCurrentPosition(
 (pos) => {
 if (token !== state.geoToken) return;
 state.pendingLocation = pos.coords;
-refs.locStatus.innerHTML = `✓ Location ready: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+refs.pickup.value = '';
+setInvalid(refs.pickup, refs.pickupErr, false);
+refs.locStatus.textContent = `Location ready: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}.`;
 refs.getLocation.disabled = false;
 refs.getLocation.textContent = 'Get My Exact Location';
-toast('Location ready to share!', 'success');
 },
 (err) => {
 if (token !== state.geoToken) return;
 refs.getLocation.disabled = false;
 refs.getLocation.textContent = 'Get My Exact Location';
-toast('Location access denied', 'error');
-}
-);
-}
-
-function shareLoc(phone, name) {
-if (!state.pendingLocation) {
-toast('Get location first', 'error');
-return;
-}
-const { latitude, longitude } = state.pendingLocation;
-const url = `https://maps.google.com/?q=${latitude},${longitude}`;
-const text = `I need a safe ride from this location: ${url}`;
-window.location.href = `sms:${phone}?body=${encodeURIComponent(text)}`;
-}
-
-function shareLocLive(phone) {
-if (!navigator.geolocation) {
-toast('Geolocation not supported', 'error');
-return;
-}
-state.geoToken++;
-const token = state.geoToken;
-refs.getLocation.disabled = false;
-refs.getLocation.textContent = 'Get My Exact Location';
-toast('Getting your exact location...', 'success');
-navigator.geolocation.getCurrentPosition(
-(pos) => {
-if (token !== state.geoToken) return;
-state.pendingLocation = pos.coords;
-refs.locStatus.textContent = `✓ Location ready: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-shareLoc(phone, 'AADD');
+refs.locStatus.textContent = err.code === 1
+? 'Location access was denied. Allow location in your browser or device settings, or enter your pickup location below.'
+: 'Could not get your location. Try again, or enter your pickup location below.';
 },
-() => { if (token === state.geoToken) toast('Location access denied', 'error'); },
 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
 );
 }
 
-function submitRequest() {
-if (!state.pendingLocation) {
-toast('Get your location first', 'error');
-return;
-}
-
-const dropoff = refs.dropoff.value.trim();
-if (!dropoff) {
-toast('Enter drop-off destination', 'error');
-return;
-}
-
+function pickupLocation() {
+const manual = refs.pickup.value.trim();
+if (manual) return manual;
+if (state.pendingLocation) {
 const { latitude, longitude } = state.pendingLocation;
-const url = `https://maps.google.com/?q=${latitude},${longitude}`;
-const text = `I need a safe ride. Pickup: ${url}\nDrop-off: ${dropoff}`;
+return `https://maps.google.com/?q=${latitude},${longitude}`;
+}
+return '';
+}
+
+function requirePickup() {
+const pickup = pickupLocation();
+setInvalid(refs.pickup, refs.pickupErr, !pickup);
+if (!pickup) {
+refs.pickup.focus();
+}
+return pickup;
+}
+
+function shareLoc(phone) {
+const pickup = requirePickup();
+if (!pickup) return;
+const text = `I need a safe ride from this location: ${pickup}`;
+window.location.href = `sms:${phone}?body=${encodeURIComponent(text)}`;
+}
+
+function submitRequest() {
+const pickup = requirePickup();
+const dropoff = refs.dropoff.value.trim();
+setInvalid(refs.dropoff, refs.dropoffErr, !dropoff);
+if (!pickup) return;
+if (!dropoff) {
+refs.dropoff.focus();
+return;
+}
+
+const text = `I need a safe ride. Pickup: ${pickup}\nDrop-off: ${dropoff}`;
 window.location.href = `sms:${AADD_CONTACT.phone.replace(/\D/g, '')}?body=${encodeURIComponent(text)}`;
 }
 
@@ -1135,6 +1139,17 @@ window.location.href = `sms:${AADD_CONTACT.phone.replace(/\D/g, '')}?body=${enco
 refs.saveProfile.addEventListener('click', saveRiderProfile);
 refs.getLocation.addEventListener('click', getLocation);
 refs.submitRequest.addEventListener('click', submitRequest);
+refs.pickup.addEventListener('input', () => {
+state.geoToken++;
+state.pendingLocation = null;
+refs.getLocation.disabled = false;
+refs.getLocation.textContent = 'Get My Exact Location';
+refs.locStatus.textContent = refs.pickup.value.trim()
+? 'Using the pickup location you entered.'
+: 'Location not yet obtained.';
+setInvalid(refs.pickup, refs.pickupErr, false);
+});
+refs.dropoff.addEventListener('input', () => setInvalid(refs.dropoff, refs.dropoffErr, false));
 
 refs.settingsBtn.addEventListener('click', () => {
 refs.settingsModal.classList.add('active');
@@ -1194,10 +1209,13 @@ state.pendingLocation = null;
 refs.rPhone.value = '';
 refs.supRows.innerHTML = '';
 refs.shareSupWrap.innerHTML = '';
+refs.pickup.value = '';
 refs.dropoff.value = '';
 refs.getLocation.disabled = false;
 refs.getLocation.textContent = 'Get My Exact Location';
 refs.locStatus.textContent = 'Location not yet obtained.';
+setInvalid(refs.pickup, refs.pickupErr, false);
+setInvalid(refs.dropoff, refs.dropoffErr, false);
 updateNavDots();
 goTo('home');
 toast('App data deleted', 'success');
