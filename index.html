@@ -167,7 +167,7 @@ font-weight: 600;
 letter-spacing: .2px;
 }
 
-input[type=text], input[type=tel] {
+input[type=text], input[type=tel], select {
 width: 100%;
 padding: 11px 12px;
 border-radius: 10px;
@@ -178,7 +178,7 @@ font-size: 16px;
 transition: border-color .15s, box-shadow .15s;
 }
 
-input:focus {
+input:focus, select:focus {
 outline: none;
 border-color: var(--gold);
 box-shadow: 0 0 0 3px rgba(212,175,55,.18);
@@ -748,7 +748,7 @@ border-color: #c73b35;
 
 <div class="card">
 <h2><span class="icon">🚀</span> Optional: Save contacts</h2>
-<p class="subtitle">Save your profile to quickly share your pickup location with a supervisor or colleague.</p>
+<p class="subtitle">Save your profile to quickly share your pickup location or ride request with a supervisor or colleague.</p>
 <div class="checklist" id="home-checklist"></div>
 </div>
 
@@ -813,6 +813,19 @@ border-color: #c73b35;
 <h2><span class="icon">💬</span> 3. Text AADD</h2>
 <p class="subtitle">This opens your messaging app with your pickup and destination. Review the text and press Send to request a ride.</p>
 <button class="btn btn-primary" id="submit-request">Text AADD to Request a Ride</button>
+</div>
+
+<div class="card">
+<h2><span class="icon">👥</span> Share ride request</h2>
+<p class="subtitle">Choose a saved contact or enter a phone number to share your pickup and drop-off. Review and send the text in your messaging app.</p>
+<label for="share-recipient">Saved contact</label>
+<select id="share-recipient">
+<option value="">Enter a phone number</option>
+</select>
+<label for="share-phone">Recipient phone number</label>
+<input type="tel" id="share-phone" placeholder="(555) 555-5555" autocomplete="off" aria-describedby="share-phone-err" />
+<div class="field-error" id="share-phone-err" role="alert">Enter a valid recipient phone number.</div>
+<button class="btn btn-outline" id="share-request" type="button">Text Ride Request</button>
 </div>
 
 <div id="share-sup-wrap"></div>
@@ -881,6 +894,10 @@ dropoff: document.getElementById('dropoff'),
 dropoffErr: document.getElementById('dropoff-err'),
 chooseDropoffMap: document.getElementById('choose-dropoff-map'),
 submitRequest: document.getElementById('submit-request'),
+shareRecipient: document.getElementById('share-recipient'),
+sharePhone: document.getElementById('share-phone'),
+sharePhoneErr: document.getElementById('share-phone-err'),
+shareRequest: document.getElementById('share-request'),
 settingsBtn: document.getElementById('settings-btn'),
 settingsModal: document.getElementById('settings-modal'),
 closeSettings: document.getElementById('close-settings'),
@@ -1098,6 +1115,16 @@ item.addEventListener('click', () => goTo(item.dataset.go));
 function renderRequestView() {
 const profile = load(LS_PROFILE, null);
 const supervisors = withDefaultContact(profile ? profile.supervisors : []);
+const savedContacts = profile && Array.isArray(profile.supervisors) ? profile.supervisors : [];
+const selectedPhone = refs.shareRecipient.value;
+refs.shareRecipient.replaceChildren(new Option('Enter a phone number', ''));
+savedContacts.forEach((contact) => {
+if (!contact || !isValidRecipientPhone(contact.phone)) return;
+const phone = String(contact.phone).trim();
+refs.shareRecipient.add(new Option(contact.name ? `${contact.name} (${phone})` : phone, phone));
+});
+refs.shareRecipient.value = selectedPhone;
+if (refs.shareRecipient.selectedIndex === -1) refs.shareRecipient.value = '';
 let shareHTML = '';
 if (supervisors.length > 0) {
 shareHTML += '<div class="card">';
@@ -1189,7 +1216,12 @@ const text = `I need a safe ride from this location: ${pickup}`;
 window.location.href = `sms:${phone}?body=${encodeURIComponent(text)}`;
 }
 
-function submitRequest() {
+function isValidRecipientPhone(value) {
+const phone = String(value || '').trim();
+return /^[+]?[0-9\s().-]+$/.test(phone) && isValidPhone(phone);
+}
+
+function submitRequest(phone) {
 const pickup = requirePickup();
 const dropoff = refs.dropoff.value.trim();
 setInvalid(refs.dropoff, refs.dropoffErr, !dropoff);
@@ -1200,13 +1232,33 @@ return;
 }
 
 const text = `I need a safe ride. Pickup: ${pickup}\nDrop-off: ${dropoff}`;
-window.location.href = `sms:${AADD_CONTACT.phone.replace(/\D/g, '')}?body=${encodeURIComponent(text)}`;
+window.location.href = `sms:${phone}?body=${encodeURIComponent(text)}`;
+}
+
+function shareRequest() {
+const phone = refs.sharePhone.value.trim();
+const valid = isValidRecipientPhone(phone);
+setInvalid(refs.sharePhone, refs.sharePhoneErr, !valid);
+if (!valid) {
+refs.sharePhone.focus();
+return;
+}
+submitRequest(phone.replace(/[^\d+]/g, ''));
 }
 
 // Event listeners
 refs.saveProfile.addEventListener('click', saveRiderProfile);
 refs.getLocation.addEventListener('click', getLocation);
-refs.submitRequest.addEventListener('click', submitRequest);
+refs.submitRequest.addEventListener('click', () => submitRequest(AADD_CONTACT.phone.replace(/\D/g, '')));
+refs.shareRequest.addEventListener('click', shareRequest);
+refs.shareRecipient.addEventListener('change', () => {
+refs.sharePhone.value = refs.shareRecipient.value;
+setInvalid(refs.sharePhone, refs.sharePhoneErr, false);
+});
+refs.sharePhone.addEventListener('input', () => {
+refs.shareRecipient.value = '';
+setInvalid(refs.sharePhone, refs.sharePhoneErr, false);
+});
 refs.pickup.addEventListener('input', () => {
 state.geoToken++;
 state.pendingLocation = null;
@@ -1245,6 +1297,9 @@ return;
 refs.rPhone.value = '';
 refs.supRows.innerHTML = '';
 refs.shareSupWrap.innerHTML = '';
+refs.shareRecipient.replaceChildren(new Option('Enter a phone number', ''));
+refs.sharePhone.value = '';
+setInvalid(refs.sharePhone, refs.sharePhoneErr, false);
 updateNavDots();
 goTo('home');
 toast('Rider profile deleted', 'success');
@@ -1282,6 +1337,10 @@ refs.supRows.innerHTML = '';
 refs.shareSupWrap.innerHTML = '';
 refs.pickup.value = '';
 refs.dropoff.value = '';
+refs.shareRecipient.replaceChildren(new Option('Enter a phone number', ''));
+refs.sharePhone.value = '';
+setInvalid(refs.sharePhone, refs.sharePhoneErr, false);
+updateDropoffMapLink();
 refs.getLocation.disabled = false;
 refs.getLocation.textContent = 'Get My Exact Location';
 refs.locStatus.textContent = 'Location not yet obtained.';
