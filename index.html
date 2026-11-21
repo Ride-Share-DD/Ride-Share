@@ -814,6 +814,14 @@ border-color: #c73b35;
 
 <div id="share-sup-wrap"></div>
 </section>
+
+<section id="view-events" class="view">
+<div class="card">
+<h2><span class="icon">📅</span> AADD Events</h2>
+<p class="subtitle">See where AADD will be attending events.</p>
+<div id="events-list" aria-live="polite"></div>
+</div>
+</section>
 </main>
 
 <footer class="app-footer">
@@ -824,6 +832,7 @@ Ride-Share prototype
 <button data-view="home" class="active"><span class="nav-icon">🏠</span>Home</button>
 <button data-view="rider-profile"><span class="nav-icon">👤</span>Profile<span class="dot" id="dot-profile"></span></button>
 <button data-view="request"><span class="nav-icon">📍</span>Request</button>
+<button data-view="events"><span class="nav-icon">📅</span>Events</button>
 </nav>
 
 <div id="settings-modal" class="settings-modal">
@@ -855,6 +864,7 @@ const LS_REQUESTS = 'rideshare_requests';
 const refs = {
 toastWrap: document.getElementById('toast-wrap'),
 homeChecklist: document.getElementById('home-checklist'),
+eventsList: document.getElementById('events-list'),
 shareSupWrap: document.getElementById('share-sup-wrap'),
 rPhone: document.getElementById('r-phone'),
 rPhoneErr: document.getElementById('r-phone-err'),
@@ -943,6 +953,7 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
 if (viewName === 'home') renderHomeChecklist();
 if (viewName === 'rider-profile') loadRiderProfileIntoForm();
 if (viewName === 'request') renderRequestView();
+if (viewName === 'events') loadEvents();
 }
 
 refs.navButtons.forEach((button) => {
@@ -952,6 +963,52 @@ button.addEventListener('click', () => goTo(button.dataset.view));
 function updateNavDots() {
 const profile = load(LS_PROFILE, null);
 refs.dotProfile.classList.toggle('show', !profile);
+}
+
+let eventsLoadToken = 0;
+async function loadEvents() {
+const token = ++eventsLoadToken;
+refs.eventsList.textContent = 'Loading events...';
+try {
+const response = await fetch('events.json', { cache: 'no-cache' });
+if (!response.ok) throw new Error('Unable to fetch events');
+const events = await response.json();
+if (token !== eventsLoadToken) return;
+if (!Array.isArray(events)) throw new Error('Invalid event list');
+events.forEach((event) => {
+if (!event || typeof event !== 'object' ||
+    !['date', 'time', 'title', 'location'].every((field) => typeof event[field] === 'string' && event[field].trim()) ||
+    (event.description !== undefined && typeof event.description !== 'string') ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(event.date)) throw new Error('Invalid event');
+const date = new Date(event.date + 'T00:00:00Z');
+if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== event.date) throw new Error('Invalid event date');
+});
+if (!events.length) {
+refs.eventsList.textContent = 'No events are scheduled yet.';
+return;
+}
+events.sort((a, b) => a.date.localeCompare(b.date));
+refs.eventsList.innerHTML = events.map((event) => {
+const date = new Date(event.date + 'T00:00:00Z').toLocaleDateString('en-US', {
+timeZone: 'UTC', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+});
+return `<article class="request-item">
+  <h3>${escapeHTML(event.title)}</h3>
+  <p class="muted">${escapeHTML(date)}<br>${escapeHTML(event.time)}<br>${escapeHTML(event.location)}</p>
+  ${event.description ? `<p class="muted">${escapeHTML(event.description)}</p>` : ''}
+</article>`;
+}).join('');
+} catch (error) {
+if (token !== eventsLoadToken) return;
+console.error('Could not load events:', error);
+refs.eventsList.textContent = 'Could not load the schedule. Please try again.';
+const retry = document.createElement('button');
+retry.type = 'button';
+retry.className = 'btn btn-outline';
+retry.textContent = 'Retry';
+retry.addEventListener('click', loadEvents);
+refs.eventsList.appendChild(retry);
+}
 }
 
 const AADD_CONTACT = { order: 1, name: 'AADD', phone: '660-624-2732' };
