@@ -801,9 +801,12 @@ border-color: #c73b35;
 
 <div class="card">
 <h2><span class="icon">🏁</span> 2. Drop-off destination</h2>
+<p class="subtitle">Choose an exact spot in Google Maps, then paste its shared link or address here.</p>
+<a class="btn btn-outline" id="choose-dropoff-map" href="https://www.google.com/maps/" target="_blank" rel="noopener noreferrer">Choose on Google Maps</a>
 <label for="dropoff">Where do you want to be dropped off?</label>
-<input type="text" id="dropoff" placeholder="Address or description" aria-describedby="dropoff-err" />
-<div class="field-error" id="dropoff-err" role="alert">Enter a drop-off destination.</div>
+<input type="text" id="dropoff" placeholder="Address, place, or Google Maps link" aria-describedby="dropoff-map-help dropoff-err" />
+<p class="muted" id="dropoff-map-help">In Google Maps, select the spot, tap Share, copy the link, and paste it above. You can also enter an address or place name.</p>
+<div class="field-error" id="dropoff-err" role="alert">Enter a drop-off destination or paste a Google Maps link.</div>
 </div>
 
 <div class="card">
@@ -847,7 +850,7 @@ Ride-Share prototype
 <details>
 <summary>Privacy controls</summary>
 <p>Your profile and contacts are stored in this browser on this device. Previously saved ride requests and driver profiles may also remain here until deleted. Location is held in the page while preparing a message.</p>
-<p>Calls and texts open your phone's apps. Your location is included in a text draft when you choose to share it; you must send the text yourself. Deleting data here does not delete messages or data held by others. You can change location permission in your browser or device settings.</p>
+<p>Calls and texts open your phone's apps. Your location is included in a text draft when you choose to share it; you must send the text yourself. Choosing a destination opens Google Maps, where searches are handled by Google. Deleting data here does not delete messages or data held by others. You can change location permission in your browser or device settings.</p>
 <button id="delete-rider-profile" type="button">Delete Rider Profile</button>
 <button id="delete-ride-history" type="button">Delete Saved Ride History</button>
 <button id="delete-all-data" class="btn-danger" type="button">Delete All App Data</button>
@@ -876,6 +879,7 @@ pickup: document.getElementById('pickup'),
 pickupErr: document.getElementById('pickup-err'),
 dropoff: document.getElementById('dropoff'),
 dropoffErr: document.getElementById('dropoff-err'),
+chooseDropoffMap: document.getElementById('choose-dropoff-map'),
 submitRequest: document.getElementById('submit-request'),
 settingsBtn: document.getElementById('settings-btn'),
 settingsModal: document.getElementById('settings-modal'),
@@ -1171,6 +1175,13 @@ refs.pickup.focus();
 return pickup;
 }
 
+function updateDropoffMapLink() {
+const place = refs.dropoff.value.trim();
+refs.chooseDropoffMap.href = place
+? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`
+: 'https://www.google.com/maps/';
+}
+
 function shareLoc(phone) {
 const pickup = requirePickup();
 if (!pickup) return;
@@ -1206,7 +1217,10 @@ refs.locStatus.textContent = refs.pickup.value.trim()
 : 'Location not yet obtained.';
 setInvalid(refs.pickup, refs.pickupErr, false);
 });
-refs.dropoff.addEventListener('input', () => setInvalid(refs.dropoff, refs.dropoffErr, false));
+refs.dropoff.addEventListener('input', () => {
+updateDropoffMapLink();
+setInvalid(refs.dropoff, refs.dropoffErr, false);
+});
 
 refs.settingsBtn.addEventListener('click', () => {
 refs.settingsModal.classList.add('active');
