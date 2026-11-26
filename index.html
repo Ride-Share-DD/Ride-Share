@@ -656,6 +656,11 @@ border-color: #c73b35;
       err=document.getElementById('access-error'),
       btn=document.getElementById('access-submit');
   var KEY='accessLockState',SESSION_KEY='accessUnlocked',MAX=3,DUR=[60,180,300,600,900],timer=null;
+  if(new URLSearchParams(location.search).get('qr')==='1'){
+    try{sessionStorage.setItem(SESSION_KEY,'1');}catch(e){}
+    lock.style.display='none';
+    return;
+  }
   try{
     if(sessionStorage.getItem(SESSION_KEY)==='1'){
       lock.style.display='none';
